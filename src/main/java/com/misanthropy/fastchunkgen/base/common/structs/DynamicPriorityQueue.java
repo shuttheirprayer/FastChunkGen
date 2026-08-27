@@ -1,6 +1,5 @@
 package com.misanthropy.fastchunkgen.base.common.structs;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
@@ -12,22 +11,29 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
  */
 public class DynamicPriorityQueue<E> {
 
+    private static final int ABSENT = -1;
+
     private final ObjectLinkedOpenHashSet<E>[] priorities;
-    private final Object2IntMap<E> priorityMap = new Object2IntOpenHashMap<>();
+    private final Object2IntOpenHashMap<E> priorityMap = new Object2IntOpenHashMap<>();
 
     private int currentMinPriority = 0;
 
+    @SuppressWarnings("unchecked")
     public DynamicPriorityQueue(int priorityCount) {
-        //noinspection unchecked
         this.priorities = new ObjectLinkedOpenHashSet[priorityCount];
         for (int i = 0; i < priorityCount; i++) {
             this.priorities[i] = new ObjectLinkedOpenHashSet<>();
         }
+        this.priorityMap.defaultReturnValue(ABSENT);
+    }
+
+    private void checkPriority(int priority) {
+        if (priority < 0 || priority >= priorities.length)
+            throw new IllegalArgumentException("Priority out of range");
     }
 
     public void enqueue(E element, int priority) {
-        if (priority < 0 || priority >= priorities.length)
-            throw new IllegalArgumentException("Priority out of range");
+        checkPriority(priority);
         if (priorityMap.containsKey(element))
             throw new IllegalArgumentException("Element already in queue");
 
@@ -38,12 +44,9 @@ public class DynamicPriorityQueue<E> {
     }
 
     public void changePriority(E element, int priority) {
-        if (priority < 0 || priority >= priorities.length)
-            throw new IllegalArgumentException("Priority out of range");
-        if (!priorityMap.containsKey(element)) return; // ignored
-
-        int oldPriority = priorityMap.getInt(element);
-        if (oldPriority == priority) return; // nothing to do
+        checkPriority(priority);
+        final int oldPriority = priorityMap.getInt(element);
+        if (oldPriority == ABSENT || oldPriority == priority) return;
 
         priorities[oldPriority].remove(element);
         priorities[priority].add(element);
@@ -71,11 +74,8 @@ public class DynamicPriorityQueue<E> {
     }
 
     public void remove(E element) {
-        if (!priorityMap.containsKey(element))
-            return; // ignore
-        int priority = priorityMap.getInt(element);
-        priorities[priority].remove(element);
-        priorityMap.removeInt(element);
+        final int priority = priorityMap.removeInt(element);
+        if (priority != ABSENT) priorities[priority].remove(element);
     }
 
     public int size() {

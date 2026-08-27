@@ -53,8 +53,9 @@ public class SchedulingManager {
             if (task.isAsync()) {
                 schedule0(task);
             } else {
-                queue.enqueue(task, prioritiesFromLevel.get(task.centerPos()));
-                pos2Tasks.computeIfAbsent(task.centerPos(), unused -> new ObjectArraySet<>()).add(task);
+                final long pos = task.centerPos();
+                queue.enqueue(task, prioritiesFromLevel.get(pos));
+                pos2Tasks.computeIfAbsent(pos, unused -> new ObjectArraySet<>()).add(task);
                 scheduleExecution();
             }
         });
@@ -73,25 +74,17 @@ public class SchedulingManager {
     }
 
     private void updatePriorityInternal(long pos) {
-        int fromLevel = prioritiesFromLevel.get(pos);
-        int fromSyncLoad;
-        if (currentSyncLoad != null) {
-            final int chebyshevDistance = chebyshev(new ChunkPos(pos), currentSyncLoad);
-            if (chebyshevDistance <= 8) {
-                fromSyncLoad = chebyshevDistance;
-//                System.out.println("dist for chunk [%d,%d] is %d".formatted(currentSyncLoad.x, currentSyncLoad.z, chebyshevDistance));
-            } else {
-                fromSyncLoad = MAX_LEVEL;
-            }
-        } else {
-            fromSyncLoad = MAX_LEVEL;
-        }
-        int priority = Math.min(fromLevel, fromSyncLoad);
         final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
-        if (locks != null) {
-            for (ScheduledTask lock : locks) {
-                queue.changePriority(lock, priority);
-            }
+        if (locks == null || locks.isEmpty()) return;
+
+        int fromSyncLoad = MAX_LEVEL;
+        if (currentSyncLoad != null) {
+            final int chebyshevDistance = chebyshev(pos, currentSyncLoad.toLong());
+            if (chebyshevDistance <= 8) fromSyncLoad = chebyshevDistance;
+        }
+        final int priority = Math.min(prioritiesFromLevel.get(pos), fromSyncLoad);
+        for (ScheduledTask lock : locks) {
+            queue.changePriority(lock, priority);
         }
     }
 
@@ -118,22 +111,19 @@ public class SchedulingManager {
     }
 
     private void updateSyncLoadInternal(ChunkPos pos) {
-        long startTime = System.nanoTime();
         for (int xOff = -8; xOff <= 8; xOff++) {
             for (int zOff = -8; zOff <= 8; zOff++) {
                 updatePriorityInternal(ChunkPos.asLong(pos.x + xOff, pos.z + zOff));
             }
         }
-        long endTime = System.nanoTime();
     }
 
     private void scheduleExecution() {
         if (scheduledCount.get() < maxScheduled && scheduled.compareAndSet(false, true)) {
             this.executor.execute(() -> {
                 try {
-                    ScheduleStatus status;
-                    while (scheduledCount.get() < maxScheduled && (status = scheduleExecutionInternal()).success) {
-                        if (!status.async) scheduledCount.incrementAndGet();
+                    while (scheduledCount.get() < maxScheduled && scheduleExecutionInternal()) {
+                        scheduledCount.incrementAndGet();
                     }
                 } catch (Throwable t) {
                     LOGGER.error("Error while scheduling chunk tasks", t);
@@ -144,22 +134,22 @@ public class SchedulingManager {
         }
     }
 
-    private ScheduleStatus scheduleExecutionInternal() {
+    private boolean scheduleExecutionInternal() {
         final ScheduledTask task = queue.dequeue();
-        if (task != null) {
-            final ObjectArraySet<ScheduledTask> tasks = this.pos2Tasks.get(task.centerPos());
-            if (tasks != null) tasks.remove(task);
-            runPos2TasksMaintenance(task.centerPos());
-            boolean scheduled1;
-            try {
-                scheduled1 = schedule0(task);
-            } catch (Throwable t) {
-                LOGGER.error("Error while preparing chunk task at {}", new ChunkPos(task.centerPos()), t);
-                return ScheduleStatus.NOT_SCHEDULED;
-            }
-            if (scheduled1) return ScheduleStatus.SCHEDULED;
+        if (task == null) return false;
+
+        final long pos = task.centerPos();
+        final ObjectArraySet<ScheduledTask> tasks = this.pos2Tasks.get(pos);
+        if (tasks != null) {
+            tasks.remove(task);
+            if (tasks.isEmpty()) this.pos2Tasks.remove(pos);
         }
-        return ScheduleStatus.NOT_SCHEDULED;
+        try {
+            return schedule0(task);
+        } catch (Throwable t) {
+            LOGGER.error("Error while preparing chunk task at {}", new ChunkPos(pos), t);
+            return false;
+        }
     }
 
     private boolean schedule0(ScheduledTask task) {
@@ -173,33 +163,8 @@ public class SchedulingManager {
         return false;
     }
 
-    private static int chebyshev(ChunkPos a, ChunkPos b) {
-        return Math.max(Math.abs(a.x - b.x), Math.abs(a.z - b.z));
-    }
-
     private static int chebyshev(long a, long b) {
         return Math.max(Math.abs(ChunkPos.getX(a) - ChunkPos.getX(b)), Math.abs(ChunkPos.getZ(a) - ChunkPos.getZ(b)));
-    }
-
-    private enum ScheduleStatus {
-        SCHEDULED(true, false),
-        SCHEDULED_ASYNC(true, true),
-        NOT_SCHEDULED(false, false);
-
-        public final boolean success;
-        public final boolean async;
-
-        ScheduleStatus(boolean success, boolean async) {
-            this.success = success;
-            this.async = async;
-        }
-    };
-
-    private void runPos2TasksMaintenance(long pos) {
-        final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
-        if (locks != null && locks.isEmpty()) {
-            this.pos2Tasks.remove(pos);
-        }
     }
 
 }

@@ -1,6 +1,5 @@
 package com.misanthropy.fastchunkgen.opts.allocs.mixin;
 
-import com.google.common.collect.Iterables;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,9 +31,12 @@ public abstract class MixinNbtList extends CollectionTag<Tag> {
      */
     @Overwrite
     public ListTag copy() {
-        Iterable<Tag> iterable = TagTypes.getType(this.type).isValue() ? this.list : Iterables.transform(this.list, Tag::copy);
-        List<Tag> list = new ObjectArrayList<>(this.list.size());
-        iterable.forEach(list::add);
+        final List<Tag> list = new ObjectArrayList<>(this.list.size());
+        if (TagTypes.getType(this.type).isValue()) {
+            list.addAll(this.list);
+        } else {
+            for (Tag tag : this.list) list.add(tag.copy());
+        }
         return new ListTag(list, this.type);
     }
 

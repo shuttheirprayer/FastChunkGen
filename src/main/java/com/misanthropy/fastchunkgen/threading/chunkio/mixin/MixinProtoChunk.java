@@ -26,20 +26,22 @@ public class MixinProtoChunk implements ProtoChunkExtension {
     @Override
     public void setBlendingInfo(ChunkPos pos, List<BitSet> bitSets) {
         final int radius = IBlender.getBLENDING_CHUNK_DISTANCE_THRESHOLD();
-        final int width = (radius * 2 + 1);
-        ChunkPos chunkPos2 = new ChunkPos(pos.x - radius, pos.z - radius);
-        ChunkPos chunkPos3 = new ChunkPos(pos.x + radius, pos.z + radius);
+        final int minX = pos.x - radius;
+        final int minZ = pos.z - radius;
+        final int maxX = pos.x + radius;
+        final int maxZ = pos.z + radius;
 
         int index = 0;
-        for(int i = chunkPos2.getRegionX(); i <= chunkPos3.getRegionX(); ++i) {
-            for(int j = chunkPos2.getRegionZ(); j <= chunkPos3.getRegionZ(); ++j) {
+        for(int i = minX >> 5; i <= maxX >> 5; ++i) {
+            for(int j = minZ >> 5; j <= maxZ >> 5; ++j) {
                 BitSet bitSet = bitSets.get(index ++);
                 if (!bitSet.isEmpty()) {
-                    ChunkPos chunkPos4 = ChunkPos.minFromRegion(i, j);
-                    int k = Math.max(chunkPos2.x - chunkPos4.x, 0);
-                    int l = Math.max(chunkPos2.z - chunkPos4.z, 0);
-                    int m = Math.min(chunkPos3.x - chunkPos4.x, 31);
-                    int n = Math.min(chunkPos3.z - chunkPos4.z, 31);
+                    final int regionMinX = i << 5;
+                    final int regionMinZ = j << 5;
+                    int k = Math.max(minX - regionMinX, 0);
+                    int l = Math.max(minZ - regionMinZ, 0);
+                    int m = Math.min(maxX - regionMinX, 31);
+                    int n = Math.min(maxZ - regionMinZ, 31);
 
                     for(int o = k; o <= m; ++o) {
                         for(int p = l; p <= n; ++p) {

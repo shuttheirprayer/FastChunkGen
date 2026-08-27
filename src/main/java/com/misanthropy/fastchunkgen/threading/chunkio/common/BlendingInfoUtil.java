@@ -16,13 +16,14 @@ public class BlendingInfoUtil {
 
     public static CompletionStage<List<BitSet>> getBlendingInfos(IOWorker worker, ChunkPos pos) {
         final int radius = IBlender.getBLENDING_CHUNK_DISTANCE_THRESHOLD();
-        List<CompletableFuture<BitSet>> futures = new ArrayList<>((radius * 2 + 1) * (radius * 2 + 1));
-        ChunkPos chunkPos2 = new ChunkPos(pos.x - radius, pos.z - radius);
-        ChunkPos chunkPos3 = new ChunkPos(pos.x + radius, pos.z + radius);
-        for(int i = chunkPos2.getRegionX(); i <= chunkPos3.getRegionX(); ++i) {
-            for(int j = chunkPos2.getRegionZ(); j <= chunkPos3.getRegionZ(); ++j) {
-                final CompletableFuture<BitSet> future = ((IStorageIoWorker) worker).invokeGetOrComputeBlendingStatus(i, j);
-                futures.add(future);
+        final int minRegionX = (pos.x - radius) >> 5;
+        final int minRegionZ = (pos.z - radius) >> 5;
+        final int maxRegionX = (pos.x + radius) >> 5;
+        final int maxRegionZ = (pos.z + radius) >> 5;
+        List<CompletableFuture<BitSet>> futures = new ArrayList<>((maxRegionX - minRegionX + 1) * (maxRegionZ - minRegionZ + 1));
+        for(int i = minRegionX; i <= maxRegionX; ++i) {
+            for(int j = minRegionZ; j <= maxRegionZ; ++j) {
+                futures.add(((IStorageIoWorker) worker).invokeGetOrComputeBlendingStatus(i, j));
             }
         }
         return Combinators.collect(futures, Collectors.toList());

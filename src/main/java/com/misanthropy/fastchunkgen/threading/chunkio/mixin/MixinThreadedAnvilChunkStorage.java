@@ -332,8 +332,15 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage implem
                         return false;
                     }
 
-                    if (chunkStatus == ChunkStatus.EMPTY && chunk.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
-                        return false;
+                    if (chunkStatus == ChunkStatus.EMPTY) {
+                        boolean hasValidStart = false;
+                        for (StructureStart start : chunk.getAllStarts().values()) {
+                            if (start.isValid()) {
+                                hasValidStart = true;
+                                break;
+                            }
+                        }
+                        if (!hasValidStart) return false;
                     }
                 }
 

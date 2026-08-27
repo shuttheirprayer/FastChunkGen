@@ -69,6 +69,7 @@ public class C2MEStorageThread extends Thread {
     };
     private final ObjectOpenHashSet<CompletableFuture<Void>> writeFutures = new ObjectOpenHashSet<>();
     private final Long2ObjectOpenHashMap<ObjectArrayList<CompletableFuture<Void>>> writeCompletions = new Long2ObjectOpenHashMap<>();
+    private static final Either<CompoundTag, byte[]> CACHE_MISS = Either.right(new byte[0]);
     private final Object sync = new Object();
     private volatile boolean waiting = false;
 
@@ -287,16 +288,15 @@ public class C2MEStorageThread extends Thread {
 
     private boolean handlePendingReads() {
         boolean hasWork = false;
-        while (!pendingReadRequests.isEmpty()) {
-            ReadRequest readRequest = this.pendingReadRequests.poll();
+        ReadRequest readRequest;
+        while ((readRequest = this.pendingReadRequests.poll()) != null) {
             hasWork = true;
-            assert readRequest != null;
             final long pos = readRequest.pos;
             final CompletableFuture<CompoundTag> future = readRequest.future;
             final StreamTagVisitor scanner = readRequest.scanner;
             try {
-                if (this.cache.containsKey(pos)) {
-                    final Either<CompoundTag, byte[]> cached = this.cache.get(pos);
+                final Either<CompoundTag, byte[]> cached = this.cache.getOrDefault(pos, CACHE_MISS);
+                if (cached != CACHE_MISS) {
                     if (cached == null) {
                         future.complete(null);
                     } else if (cached.left().isPresent()) {
@@ -368,10 +368,12 @@ public class C2MEStorageThread extends Thread {
         while (!this.writeFutures.isEmpty()) {
             while (writeBacklog()) ;
             runWriteFutureGC();
-            final CompletableFuture<Void> allFuture = CompletableFuture.allOf(this.writeFutures.stream()
-                    .map(future -> future.exceptionally(unused -> null))
-                    .distinct()
-                    .toArray(CompletableFuture[]::new));
+            final CompletableFuture<?>[] pending = new CompletableFuture[this.writeFutures.size()];
+            int index = 0;
+            for (CompletableFuture<Void> future : this.writeFutures) {
+                pending[index++] = future.exceptionally(unused -> null);
+            }
+            final CompletableFuture<Void> allFuture = CompletableFuture.allOf(pending);
             while (!allFuture.isDone()) {
                 boolean hasWork = handleTasks();
                 hasWork = handlePendingReads() || hasWork;
@@ -423,7 +425,7 @@ public class C2MEStorageThread extends Thread {
                     final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos1);
                     regionFile.clear(pos1);
                 } catch (Throwable t) {
-                    LOGGER.error("Error deleting chunk %s".formatted(new ChunkPos(pos)), t);
+                    LOGGER.error("Error deleting chunk {}", new ChunkPos(pos), t);
                     error = t;
                 }
                 this.cache.remove(pos);
@@ -467,7 +469,7 @@ public class C2MEStorageThread extends Thread {
                 return Boolean.TRUE;
             }, this.executor).handleAsync((written, throwable) -> {
                 if (throwable != null) {
-                    LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
+                    LOGGER.error("Error writing chunk {}", new ChunkPos(pos), throwable);
                     completeWriteFutures(pos, throwable);
                 } else if (written) {
                     completeWriteFutures(pos, null);

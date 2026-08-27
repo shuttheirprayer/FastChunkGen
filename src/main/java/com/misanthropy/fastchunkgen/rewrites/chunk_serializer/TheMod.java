@@ -12,12 +12,14 @@ public class TheMod {
         if (ModuleEntryPoint.enabled) {
             SerializerAccess.registerSerializer((world, chunk) -> {
                 NbtWriter nbtWriter = new NbtWriter();
-                nbtWriter.start(Tag.TAG_COMPOUND);
-                ChunkDataSerializer.write(world, chunk, nbtWriter);
-                nbtWriter.finishCompound();
-                final byte[] data = nbtWriter.toByteArray();
-                nbtWriter.release();
-                return Either.right(data);
+                try {
+                    nbtWriter.start(Tag.TAG_COMPOUND);
+                    ChunkDataSerializer.write(world, chunk, nbtWriter);
+                    nbtWriter.finishCompound();
+                    return Either.right(nbtWriter.toByteArray());
+                } finally {
+                    nbtWriter.release();
+                }
             });
         }
     }

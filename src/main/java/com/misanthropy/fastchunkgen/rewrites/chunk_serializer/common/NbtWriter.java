@@ -4,11 +4,11 @@ import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils.Strin
 import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils.UnsafeUtils;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterable;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.Unsafe;
 
 import java.io.UTFDataFormatException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.core.Holder;
@@ -106,10 +106,11 @@ public class NbtWriter {
     }
 
     private void insertLongArray(LongIterable value) {
-        value.forEach(i -> {
-            UNSAFE.putLong(this.pointer, Long.reverseBytes(i));
-            this.pointer += 8;
-        });
+        long pointer = this.pointer;
+        for (LongIterator iterator = value.iterator(); iterator.hasNext(); pointer += 8) {
+            UNSAFE.putLong(pointer, Long.reverseBytes(iterator.nextLong()));
+        }
+        this.pointer = pointer;
     }
 
     //region list entries
@@ -412,30 +413,26 @@ public class NbtWriter {
 
 
     public static byte @NotNull [] getAsciiStringBytes(String string) {
-        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
-        for (byte aByte : bytes) {
-            if (aByte <= 0) {
+        final int length = string.length();
+        byte[] res = new byte[length + 2];
+        for (int i = 0; i < length; i++) {
+            char c = string.charAt(i);
+            if (c == 0 || c > 0x7f) {
                 throw new IllegalArgumentException("String contains invalid characters");
             }
+            res[i + 2] = (byte) c;
         }
-        return wrapAsciiBytes(bytes);
-    }
-
-    @NotNull
-    private static byte[] wrapAsciiBytes(byte[] bytes) {
-        byte[] wrappedBytes = new byte[bytes.length + 2];
-        // store length in first 2 bytes
-        wrappedBytes[0] = (byte) (bytes.length >> 8);
-        wrappedBytes[1] = (byte) (bytes.length);
-        System.arraycopy(bytes, 0, wrappedBytes, 2, bytes.length);
-        return wrappedBytes;
+        res[0] = (byte) (length >> 8);
+        res[1] = (byte) (length);
+        return res;
     }
 
     public static byte @NotNull [] getStringBytes(String string) {
-        ;
-        byte[] res = new byte[string.length() * 3 + 2];
+        final int charCount = string.length();
+        byte[] res = new byte[charCount * 3 + 2];
         int index = 2;
-        for (char c : string.toCharArray()) {
+        for (int i = 0; i < charCount; i++) {
+            char c = string.charAt(i);
             if (c >= '\u0001' && c <= '\u007f') {
                 res[index++] = (byte) c;
             } else if (c <= '\u07ff') {

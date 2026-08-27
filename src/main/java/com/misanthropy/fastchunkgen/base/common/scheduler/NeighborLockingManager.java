@@ -32,8 +32,8 @@ public class NeighborLockingManager {
     }
 
     public void releaseLock(long pos) {
-        if (!isLocked(pos)) throw new IllegalStateException("Not locked");
         final ReferenceArraySet<Runnable> runnables = activeLocks.remove(pos);
+        if (runnables == null) throw new IllegalStateException("Not locked");
         for (Runnable runnable : runnables) {
             try {
                 runnable.run();
@@ -46,8 +46,9 @@ public class NeighborLockingManager {
     }
 
     public void addReleaseListener(long pos, Runnable runnable) {
-        if (!isLocked(pos)) throw new IllegalStateException("Not locked");
-        activeLocks.get(pos).add(runnable);
+        final ReferenceArraySet<Runnable> runnables = activeLocks.get(pos);
+        if (runnables == null) throw new IllegalStateException("Not locked");
+        runnables.add(runnable);
     }
 
 }

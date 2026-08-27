@@ -6,12 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
@@ -32,6 +30,8 @@ public class AsyncSerializationManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("FastChunkGen Async Serialization Manager");
 
     private static final ThreadLocal<ArrayDeque<Scope>> scopeHolder = ThreadLocal.withInitial(ArrayDeque::new);
+
+    private static final LightLayer[] LIGHT_LAYERS = LightLayer.values();
 
     public static void push(Scope scope) {
         scopeHolder.get().push(scope);
@@ -63,7 +63,11 @@ public class AsyncSerializationManager {
 
         public Scope(ChunkAccess chunk, ServerLevel world) {
             this.pos = chunk.getPos();
-            this.lighting = Arrays.stream(LightLayer.values()).map(type -> new CachedLightingView(world.getLightEngine(), chunk.getPos(), type)).collect(Collectors.toMap(CachedLightingView::getLightType, Function.identity()));
+            final Map<LightLayer, LayerLightEventListener> lighting = new EnumMap<>(LightLayer.class);
+            for (LightLayer type : LIGHT_LAYERS) {
+                lighting.put(type, new CachedLightingView(world.getLightEngine(), this.pos, type));
+            }
+            this.lighting = lighting;
             this.blockEntityPositions = chunk.getBlockEntitiesPos();
 
             final boolean isLevelChunk = chunk instanceof LevelChunk;
@@ -112,20 +116,15 @@ public class AsyncSerializationManager {
 
             private static final DataLayer EMPTY = new DataLayer();
 
-            private final LightLayer lightType;
             private final Map<SectionPos, DataLayer> cachedData = new Object2ObjectOpenHashMap<>();
 
             CachedLightingView(LevelLightEngine provider, ChunkPos pos, LightLayer type) {
-                this.lightType = type;
+                final LayerLightEventListener listener = provider.getLayerListener(type);
                 for (int i = provider.getMinLightSection(); i < provider.getMaxLightSection(); i++) {
                     final SectionPos sectionPos = SectionPos.of(pos, i);
-                    DataLayer lighting = provider.getLayerListener(type).getDataLayerData(sectionPos);
+                    DataLayer lighting = listener.getDataLayerData(sectionPos);
                     cachedData.put(sectionPos, lighting != null ? lighting.copy() : null);
                 }
-            }
-
-            public LightLayer getLightType() {
-                return this.lightType;
             }
 
             @Override

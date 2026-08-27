@@ -42,8 +42,9 @@ public class MixinChunkRegion {
     private void onInit(ServerLevel world, List<ChunkAccess> list, ChunkStatus chunkStatus, int placementRadius, CallbackInfo ci) {
         if (Config.reduceLockRadius) {
             final int reducedTaskRadius = ((IChunkStatus) chunkStatus).getReducedTaskRadius();
-            lowerReducedCorner = new ChunkPos(center.getPos().x - reducedTaskRadius, center.getPos().z - reducedTaskRadius);
-            upperReducedCorner = new ChunkPos(center.getPos().x + reducedTaskRadius, center.getPos().z + reducedTaskRadius);
+            final ChunkPos centerPos = center.getPos();
+            lowerReducedCorner = new ChunkPos(centerPos.x - reducedTaskRadius, centerPos.z - reducedTaskRadius);
+            upperReducedCorner = new ChunkPos(centerPos.x + reducedTaskRadius, centerPos.z + reducedTaskRadius);
         } else {
             lowerReducedCorner = firstPos;
             upperReducedCorner = lastPos;

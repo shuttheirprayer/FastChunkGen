@@ -50,7 +50,6 @@ public class LongHashSet implements LongSet {
         return delegate.toArray();
     }
 
-    @SuppressWarnings("SuspiciousToArrayCall")
     @NotNull
     @Override
     public <T> T[] toArray(@NotNull T @NotNull [] a) {
@@ -94,7 +93,12 @@ public class LongHashSet implements LongSet {
 
     @Override
     public long[] toLongArray() {
-        return delegate.stream().mapToLong(value -> value).toArray();
+        final long[] result = new long[delegate.size()];
+        int i = 0;
+        for (long value : delegate) {
+            result[i++] = value;
+        }
+        return result;
     }
 
     @Override

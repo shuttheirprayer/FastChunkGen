@@ -5,13 +5,11 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class ChunkIoMainThreadTaskUtils {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final ThreadLocal<ArrayDeque<ReferenceArrayList<Runnable>>> deserializeStack = ThreadLocal.withInitial(ArrayDeque::new);
-    private static final LinkedBlockingQueue<Runnable> mainThreadQueue = new LinkedBlockingQueue<>();
 
     public static void push(ReferenceArrayList<Runnable> queue) {
         if (queue == null) {

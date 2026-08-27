@@ -1,6 +1,9 @@
 package com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common;
 
+import com.misanthropy.fastchunkgen.base.mixin.access.INbtCompound;
 import net.minecraft.nbt.*;
+
+import java.util.Map;
 
 public class NbtWriterVisitor implements TagVisitor {
     private final NbtWriter writer;
@@ -69,10 +72,7 @@ public class NbtWriterVisitor implements TagVisitor {
 
     @Override
     public void visitCompound(CompoundTag compound) {
-        for (String name : compound.getAllKeys()) {
-            var element = compound.get(name);
-            this.visit(name, element);
-        }
+        visitEntries(compound);
         this.writer.finishCompound();
     }
 
@@ -80,80 +80,40 @@ public class NbtWriterVisitor implements TagVisitor {
         this.writer.putString(name, element.getAsString());
     }
 
-    public void visitString(String name, StringTag element) {
-        this.visitString(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitByte(byte[] name, ByteTag element) {
         this.writer.putByte(name, element.getAsByte());
-    }
-
-    public void visitByte(String name, ByteTag element) {
-        this.visitByte(NbtWriter.getStringBytes(name), element);
     }
 
     public void visitShort(byte[] name, ShortTag element) {
         this.writer.putShort(name, element.getAsShort());
     }
 
-    public void visitShort(String name, ShortTag element) {
-        this.visitShort(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitInt(byte[] name, IntTag element) {
         this.writer.putInt(name, element.getAsInt());
-    }
-
-    public void visitInt(String name, IntTag element) {
-        this.visitInt(NbtWriter.getStringBytes(name), element);
     }
 
     public void visitLong(byte[] name, LongTag element) {
         this.writer.putLong(name, element.getAsLong());
     }
 
-    public void visitLong(String name, LongTag element) {
-        this.visitLong(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitFloat(byte[] name, FloatTag element) {
         this.writer.putFloat(name, element.getAsFloat());
-    }
-
-    public void visitFloat(String name, FloatTag element) {
-        this.visitFloat(NbtWriter.getStringBytes(name), element);
     }
 
     public void visitDouble(byte[] name, DoubleTag element) {
         this.writer.putDouble(name, element.getAsDouble());
     }
 
-    public void visitDouble(String name, DoubleTag element) {
-        this.visitDouble(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitByteArray(byte[] name, ByteArrayTag element) {
         this.writer.putByteArray(name, element.getAsByteArray());
-    }
-
-    public void visitByteArray(String name, ByteArrayTag element) {
-        this.visitByteArray(NbtWriter.getStringBytes(name), element);
     }
 
     public void visitIntArray(byte[] name, IntArrayTag element) {
         this.writer.putIntArray(name, element.getAsIntArray());
     }
 
-    public void visitIntArray(String name, IntArrayTag element) {
-        this.visitIntArray(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitLongArray(byte[] name, LongArrayTag element) {
         this.writer.putLongArray(name, element.getAsLongArray());
-    }
-
-    public void visitLongArray(String name, LongArrayTag element) {
-        this.visitLongArray(NbtWriter.getStringBytes(name), element);
     }
 
     public void visitList(byte[] name, ListTag element) {
@@ -163,39 +123,20 @@ public class NbtWriterVisitor implements TagVisitor {
         }
     }
 
-    public void visitList(String name, ListTag element) {
-        this.visitList(NbtWriter.getStringBytes(name), element);
-    }
-
     public void visitCompound(byte[] name, CompoundTag compound) {
         this.writer.startCompound(name);
-        for (String nameBase : compound.getAllKeys()) {
-            var element = compound.get(nameBase);
-            this.visit(nameBase, element);
-        }
+        visitEntries(compound);
         this.writer.finishCompound();
     }
 
-    public void visitCompound(String name, CompoundTag compound) {
-        this.visitCompound(NbtWriter.getStringBytes(name), compound);
+    private void visitEntries(CompoundTag compound) {
+        for (Map.Entry<String, Tag> entry : ((INbtCompound) (Object) compound).invokeToMap().entrySet()) {
+            this.visit(entry.getKey(), entry.getValue());
+        }
     }
 
     public void visit(String nameBase, Tag element) {
-        switch (element.getId()) {
-            case Tag.TAG_STRING -> this.visitString(nameBase, (StringTag) element);
-            case Tag.TAG_BYTE -> this.visitByte(nameBase, (ByteTag) element);
-            case Tag.TAG_SHORT -> this.visitShort(nameBase, (ShortTag) element);
-            case Tag.TAG_INT -> this.visitInt(nameBase, (IntTag) element);
-            case Tag.TAG_LONG -> this.visitLong(nameBase, (LongTag) element);
-            case Tag.TAG_FLOAT -> this.visitFloat(nameBase, (FloatTag) element);
-            case Tag.TAG_DOUBLE -> this.visitDouble(nameBase, (DoubleTag) element);
-            case Tag.TAG_BYTE_ARRAY -> this.visitByteArray(nameBase, (ByteArrayTag) element);
-            case Tag.TAG_INT_ARRAY -> this.visitIntArray(nameBase, (IntArrayTag) element);
-            case Tag.TAG_LONG_ARRAY -> this.visitLongArray(nameBase, (LongArrayTag) element);
-            case Tag.TAG_LIST -> this.visitList(nameBase, (ListTag) element);
-            case Tag.TAG_COMPOUND -> this.visitCompound(nameBase, (CompoundTag) element);
-            default -> throw new IllegalArgumentException("Unknown NbtElement type: " + element.getId());
-        }
+        this.visit(NbtWriter.getStringBytes(nameBase), element);
     }
 
     public void visit(byte[] nameBase, Tag element) {

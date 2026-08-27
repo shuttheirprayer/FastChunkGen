@@ -68,8 +68,15 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage {
                     return false;
                 }
 
-                if (chunkStatus == ChunkStatus.EMPTY && chunk.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
-                    return false;
+                if (chunkStatus == ChunkStatus.EMPTY) {
+                    boolean hasValidStart = false;
+                    for (StructureStart start : chunk.getAllStarts().values()) {
+                        if (start.isValid()) {
+                            hasValidStart = true;
+                            break;
+                        }
+                    }
+                    if (!hasValidStart) return false;
                 }
             }
 
@@ -78,9 +85,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage {
             //region start replaced code
             // NbtCompound nbtCompound = ChunkSerializer.serialize(this.world, chunk);
             NbtWriter nbtWriter = new NbtWriter();
-            nbtWriter.start(Tag.TAG_COMPOUND);
-            ChunkDataSerializer.write(this.level, chunk, nbtWriter);
-            nbtWriter.finishCompound();
+            try {
+                nbtWriter.start(Tag.TAG_COMPOUND);
+                ChunkDataSerializer.write(this.level, chunk, nbtWriter);
+                nbtWriter.finishCompound();
 
             // this.setNbt(chunkPos, nbtCompound);
             // temp fix, idk,
@@ -97,8 +105,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage {
 //                    return Either.right(t);
 //                }
 //            });
-            ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
-            nbtWriter.release();
+                ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
+            } finally {
+                nbtWriter.release();
+            }
 
             //endregion end replaced code
 

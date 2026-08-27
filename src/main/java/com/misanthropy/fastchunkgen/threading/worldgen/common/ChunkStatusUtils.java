@@ -7,7 +7,6 @@ import com.misanthropy.fastchunkgen.base.common.GlobalExecutors;
 import com.misanthropy.fastchunkgen.base.common.scheduler.NeighborLockingTask;
 import com.misanthropy.fastchunkgen.base.common.scheduler.SchedulingManager;
 import com.mojang.datafixers.util.Either;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
@@ -37,9 +36,6 @@ public class ChunkStatusUtils {
             return PARALLELIZED;
         } else if (status.equals(ChunkStatus.FEATURES)) {
             return Config.allowThreadedFeatures ? PARALLELIZED : SINGLE_THREADED;
-        } else if (status.equals(ChunkStatus.INITIALIZE_LIGHT) ||
-                   status.equals(ChunkStatus.LIGHT)) {
-            return AS_IS;
         }
         return AS_IS;
     }
@@ -72,18 +68,20 @@ public class ChunkStatusUtils {
 //                target.toString(),
 //                async);
 
-        LongArrayList lockTargets = new LongArrayList((2 * radius + 1) * (2 * radius + 1));
+        final int diameter = 2 * radius + 1;
+        final long[] lockTargets = new long[diameter * diameter];
+        int index = 0;
         for (int x = target.x - radius; x <= target.x + radius; x++)
             for (int z = target.z - radius; z <= target.z + radius; z++)
-                lockTargets.add(ChunkPos.asLong(x, z));
+                lockTargets[index++] = ChunkPos.asLong(x, z);
 
         final NeighborLockingTask<T> task = new NeighborLockingTask<>(
                 schedulingManager,
                 target.toLong(),
-                lockTargets.toLongArray(),
+                lockTargets,
                 isCancelled,
                 action,
-                "%s %s".formatted(target.toString(), status.toString()),
+                target + " " + status,
                 async
         );
         return task.getFuture();

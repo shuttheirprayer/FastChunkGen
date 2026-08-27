@@ -14,6 +14,7 @@ import com.misanthropy.fastchunkgen.base.mixin.access.IStructureStart;
 import com.misanthropy.fastchunkgen.base.mixin.access.IUpgradeData;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.shorts.ShortIterator;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -27,9 +28,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.ShortTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -60,6 +59,7 @@ import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
+import net.minecraft.world.level.lighting.LayerLightEventListener;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import net.minecraft.world.ticks.ProtoChunkTicks;
@@ -289,8 +289,8 @@ public final class ChunkDataSerializer {
         for (ShortList shortList : data) {
             if (shortList != null) {
                 writer.startFixedListEntry(shortList.size(), Tag.TAG_SHORT);
-                for (Short short_ : shortList) {
-                    writer.putShortEntry(short_);
+                for (ShortIterator iterator = shortList.iterator(); iterator.hasNext(); ) {
+                    writer.putShortEntry(iterator.nextShort());
                 }
             } else {
                 writer.startFixedListEntry(0, Tag.TAG_END);
@@ -328,14 +328,16 @@ public final class ChunkDataSerializer {
         long sectionsStart = writer.startList(STRING_SECTIONS, Tag.TAG_COMPOUND);
         int sectionCount = 0;
 
+        final LayerLightEventListener blockLightListener = lightingProvider.getLayerListener(LightLayer.BLOCK);
+        final LayerLightEventListener skyLightListener = lightingProvider.getLayerListener(LightLayer.SKY);
+
         for (int i = lightingProvider.getMinLightSection(); i < lightingProvider.getMaxLightSection(); ++i) {
             int index = chunk.getSectionIndexFromSectionY(i);
             boolean bl2 = index >= 0 && index < chunkSections.length;
 
-            DataLayer blockLight = lightingProvider.getLayerListener(LightLayer.BLOCK)
-                    .getDataLayerData(SectionPos.of(chunkPos, i));
-            DataLayer skyLight = lightingProvider.getLayerListener(LightLayer.SKY)
-                    .getDataLayerData(SectionPos.of(chunkPos, i));
+            SectionPos sectionPos = SectionPos.of(chunkPos, i);
+            DataLayer blockLight = blockLightListener.getDataLayerData(sectionPos);
+            DataLayer skyLight = skyLightListener.getDataLayerData(sectionPos);
 
             if (bl2 || blockLight != null || skyLight != null) {
                 boolean hasInner = false;
@@ -607,25 +609,6 @@ public final class ChunkDataSerializer {
 
         writer.putByte(STRING_SIDES, (byte) i);
     }
-
-    @Deprecated
-    public static ListTag toNbt(ShortList[] lists) {
-        ListTag nbtList = new ListTag();
-
-        for (ShortList shortList : lists) {
-            ListTag nbtList2 = new ListTag();
-            if (shortList != null) {
-                for (Short short_ : shortList) {
-                    nbtList2.add(ShortTag.valueOf(short_));
-                }
-            }
-
-            nbtList.add(nbtList2);
-        }
-
-        return nbtList;
-    }
-
 
     /**
      * mirror of {@link ChunkSerializer#saveTicks(ServerLevel, CompoundTag, ChunkAccess.TicksToSave)}
