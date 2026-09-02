@@ -30,13 +30,7 @@ public class ModuleEntryPoint {
 
     private static int parallelismFromHeap() {
         final double memGiB = Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0 / 1024.0;
-        final double raw;
-        if (PlatformDependent.isJ9Jvm()) {
-            raw = (memGiB - (isClientSide() ? 0.6 : 0.2)) / 0.5;
-        } else {
-            raw = (memGiB - (isClientSide() ? 1.2 : 0.6)) / 1.2;
-        }
-        return (int) raw;
+        return (int) (memGiB / (PlatformDependent.isJ9Jvm() ? 0.3 : 0.6));
     }
 
     private static int computeDefaultParallelism() {
@@ -53,6 +47,11 @@ public class ModuleEntryPoint {
         }
 
         defaultParallelism = value;
+        ConfigSystem.LOGGER.info(
+                "Default worker threads: {} (cpu bound: {}, heap bound: {}, {} cpus, {} MiB heap)",
+                value, parallelismFromCpu(), parallelismFromHeap(),
+                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().maxMemory() / 1024L / 1024L);
         globalExecutorParallelism = new ConfigSystem.ConfigAccessor()
                 .key("globalExecutorParallelism")
                 .comment("Worker threads used for chunk generation and IO.")
