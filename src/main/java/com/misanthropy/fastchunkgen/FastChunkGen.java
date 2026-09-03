@@ -3,6 +3,8 @@ package com.misanthropy.fastchunkgen;
 import com.misanthropy.fastchunkgen.base.common.compat.ModCompat;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
 import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.TheMod;
+import com.misanthropy.fastchunkgen.threading.worldgen.common.BiomeSourceWarmup;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,7 @@ public class FastChunkGen {
             }
         }
         TheMod.init();
+        MinecraftForge.EVENT_BUS.addListener(BiomeSourceWarmup::onLevelLoad);
         ConfigSystem.flushConfig();
         reportCompat();
         com.misanthropy.fastchunkgen.client.ClientSetup.init();
