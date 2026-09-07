@@ -15,4 +15,14 @@ public class Config {
             .comment("Cache End biome lookups.")
             .getBoolean(true, false);
 
+    public static final boolean cacheDensityFunctionHashes = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.cacheDensityFunctionHashes")
+            .comment("Cache the hashCode of density function and spline records. They are immutable, so the value never changes.")
+            .getBoolean(true, false);
+
+    public static final boolean skipRedundantDensityFunctionWrapping = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.skipRedundantDensityFunctionWrapping")
+            .comment("Skip the NoiseChunk wrapper map for density functions it would hand straight back. Only marker nodes own a cache that has to be shared.")
+            .getBoolean(true, false);
+
 }
