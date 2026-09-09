@@ -50,6 +50,18 @@ public class MixinChunkSerializer {
         return bus.post(event);
     }
 
+    @Redirect(
+            method = "read",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;readCapsFromNBT(Lnet/minecraft/nbt/CompoundTag;)V", remap = false)
+    )
+    private static void deferCapabilityDeserialization(LevelChunk chunk, CompoundTag caps) {
+        if (Config.forgeChunkDataEventsOnMainThread) {
+            ChunkIoMainThreadTaskUtils.executeMain(() -> chunk.readCapsFromNBT(caps));
+        } else {
+            chunk.readCapsFromNBT(caps);
+        }
+    }
+
     @Redirect(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getBlockEntitiesPos()Ljava/util/Set;"))
     private static Set<BlockPos> onChunkGetBlockEntityPositions(ChunkAccess chunk) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());

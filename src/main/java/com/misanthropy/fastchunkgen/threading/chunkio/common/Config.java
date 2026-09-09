@@ -16,7 +16,7 @@ public class Config {
 
     public static final boolean forgeChunkDataEventsOnMainThread = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.forgeChunkDataEventsOnMainThread")
-            .comment("Fire Forge chunk data events on the server thread. Off is unsafe for most mods.")
+            .comment("Fire Forge chunk data events and deserialize chunk capabilities on the server thread. Off is unsafe for most mods.")
             .getBoolean(true, true);
 
     public static final boolean serializeBlockEntitiesOnMainThread = new ConfigSystem.ConfigAccessor()
