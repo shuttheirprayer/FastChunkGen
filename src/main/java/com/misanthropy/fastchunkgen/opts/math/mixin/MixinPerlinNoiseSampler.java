@@ -10,12 +10,6 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = ImprovedNoise.class, priority = 1090)
 public abstract class MixinPerlinNoiseSampler {
 
-    @Shadow @Final public double yo;
-
-    @Shadow @Final public double xo;
-
-    @Shadow @Final public double zo;
-
     @Shadow @Final private byte[] p;
 
     @Unique
@@ -37,37 +31,6 @@ public abstract class MixinPerlinNoiseSampler {
             -1, 1, 0, 0,
             0, -1, -1, 0,
     };
-
-    /**
-     * @author ishland
-     * @reason optimize: remove frequent type conversions
-     */
-    @Deprecated
-    @Overwrite
-    public double noise(double x, double y, double z, double yScale, double yMax) {
-        double d = x + this.xo;
-        double e = y + this.yo;
-        double f = z + this.zo;
-        double i = Math.floor(d);
-        double j = Math.floor(e);
-        double k = Math.floor(f);
-        double g = d - i;
-        double h = e - j;
-        double l = f - k;
-        double o = 0.0D;
-        if (yScale != 0.0) {
-            double m;
-            if (yMax >= 0.0 && yMax < h) {
-                m = yMax;
-            } else {
-                m = h;
-            }
-
-            o = Math.floor(m / yScale + 1.0E-7F) * yScale;
-        }
-
-        return this.sampleAndLerp((int) i, (int) j, (int) k, g, h - o, l, h);
-    }
 
     /**
      * @author ishland

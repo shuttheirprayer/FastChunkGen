@@ -3,8 +3,8 @@ package com.misanthropy.fastchunkgen.rewrites.chunkio.common;
 import com.ibm.asyncutil.util.Either;
 import com.misanthropy.fastchunkgen.base.common.GlobalExecutors;
 import com.misanthropy.fastchunkgen.base.common.structs.RawByteArrayOutputStream;
+import com.misanthropy.fastchunkgen.base.common.util.RegionFileUtil;
 import com.misanthropy.fastchunkgen.base.common.util.SneakyThrow;
-import com.misanthropy.fastchunkgen.base.mixin.access.IRegionBasedStorage;
 import com.misanthropy.fastchunkgen.base.mixin.access.IRegionFile;
 import com.misanthropy.fastchunkgen.opts.chunkio.common.ConfigConstants;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -386,8 +386,8 @@ public class C2MEStorageThread extends Thread {
     private void scheduleChunkRead(long pos, CompletableFuture<CompoundTag> future, StreamTagVisitor scanner) {
         try {
             final ChunkPos pos1 = new ChunkPos(pos);
-            final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos1);
-            final DataInputStream chunkInputStream = regionFile.getChunkDataInputStream(pos1);
+            final RegionFile regionFile = RegionFileUtil.getRegionFile(this.storage, pos1, false);
+            final DataInputStream chunkInputStream = regionFile != null ? regionFile.getChunkDataInputStream(pos1) : null;
             if (chunkInputStream == null) {
                 future.complete(null);
                 return;
@@ -422,8 +422,8 @@ public class C2MEStorageThread extends Thread {
                 Throwable error = null;
                 try {
                     final ChunkPos pos1 = new ChunkPos(pos);
-                    final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos1);
-                    regionFile.clear(pos1);
+                    final RegionFile regionFile = RegionFileUtil.getRegionFile(this.storage, pos1, false);
+                    if (regionFile != null) regionFile.clear(pos1);
                 } catch (Throwable t) {
                     LOGGER.error("Error deleting chunk {}", new ChunkPos(pos), t);
                     error = t;
@@ -457,7 +457,7 @@ public class C2MEStorageThread extends Thread {
                 if (nbt != this.cache.get(pos)) return Boolean.FALSE;
                 try {
                     final ChunkPos pos1 = new ChunkPos(pos);
-                    final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos1);
+                    final RegionFile regionFile = RegionFileUtil.getRegionFile(this.storage, pos1, true);
                     ByteBuffer byteBuffer = bytes.asByteBuffer();
                     // TODO [VanillaCopy] RegionFile.ChunkBuffer
                     byteBuffer.putInt(0, bytes.size() - 5 + 1);

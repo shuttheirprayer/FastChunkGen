@@ -1,7 +1,7 @@
 package com.misanthropy.fastchunkgen.base.mixin.theinterface;
 
 import com.misanthropy.fastchunkgen.base.common.theinterface.IDirectStorage;
-import com.misanthropy.fastchunkgen.base.mixin.access.IRegionBasedStorage;
+import com.misanthropy.fastchunkgen.base.common.util.RegionFileUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.storage.IOWorker;
@@ -34,7 +34,7 @@ public abstract class MixinStorageIoWorker implements IDirectStorage {
         return this.submitTask(() -> {
             IOWorker.PendingStore result = this.pendingWrites.get(pos);
             try {
-                final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos);
+                final RegionFile regionFile = RegionFileUtil.getRegionFile(this.storage, pos, true);
                 try (final DataOutputStream out = regionFile.getChunkDataOutputStream(pos)) {
                     out.write(data);
                 }
