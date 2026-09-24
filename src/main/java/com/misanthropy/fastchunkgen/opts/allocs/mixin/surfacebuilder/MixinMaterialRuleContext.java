@@ -13,7 +13,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 
@@ -54,8 +53,6 @@ public class MixinMaterialRuleContext {
     private int lazyPosZ;
     @Unique
     private Holder<Biome> lastBiome = null;
-    @Unique
-    private ResourceKey<Biome> lastBiomeKey = null;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
@@ -85,7 +82,6 @@ public class MixinMaterialRuleContext {
         this.lazyPosZ = n;
         // clear cache
         this.lastBiome = null;
-        this.lastBiomeKey = null;
     }
 
 }

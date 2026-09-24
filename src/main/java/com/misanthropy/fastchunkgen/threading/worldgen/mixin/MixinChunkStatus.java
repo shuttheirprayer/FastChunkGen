@@ -128,11 +128,9 @@ public abstract class MixinChunkStatus implements IChunkStatus {
                 completableFuture = ChunkStatusUtils.runChunkGenWithLock(
                                 targetChunk.getPos(),
                                 thiz,
-                                holder,
                                 lockRadius,
                                 ((IVanillaChunkManager) tacs).fcg$getSchedulingManager(),
                         (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
-                                ((IWorldGenLockable) world).getWorldGenChunkLock(),
                                 () -> ChunkStatusUtils.getThreadingType(thiz).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;

@@ -16,7 +16,6 @@
     "mid_tick_chunk_tasks.MixinServerChunkManager",
     "mid_tick_chunk_tasks.MixinServerWorld",
     "mid_tick_chunk_tasks.MixinWorld",
-    "ordering.player_move.MixinServerPlayNetworkHandler",
     "shutdown.MixinMinecraftServer",
     "shutdown.MixinServerEntityManager",
     "shutdown.MixinServerWorld",

@@ -2,13 +2,11 @@ package com.misanthropy.fastchunkgen.threading.worldgen.common;
 
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
-import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.misanthropy.fastchunkgen.base.common.GlobalExecutors;
 import com.misanthropy.fastchunkgen.base.common.scheduler.NeighborLockingTask;
 import com.misanthropy.fastchunkgen.base.common.scheduler.SchedulingManager;
 import com.mojang.datafixers.util.Either;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import net.minecraft.server.level.ChunkHolder;
@@ -22,8 +20,6 @@ import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatus
 import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.SINGLE_THREADED;
 
 public class ChunkStatusUtils {
-
-    public static final BooleanSupplier FALSE_SUPPLIER = () -> false;
 
     public static ChunkStatusThreadingType getThreadingType(final ChunkStatus status) {
         if (status.equals(ChunkStatus.STRUCTURE_STARTS)
@@ -40,34 +36,8 @@ public class ChunkStatusUtils {
         return AS_IS;
     }
 
-    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, ChunkStatus status, ChunkHolder holder, int radius, SchedulingManager schedulingManager, boolean async, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
+    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, ChunkStatus status, int radius, SchedulingManager schedulingManager, boolean async, Supplier<CompletableFuture<T>> action) {
         Preconditions.checkNotNull(status);
-//        if (radius == 0)
-//            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
-
-        BooleanSupplier isCancelled;
-
-        if (holder != null) {
-            isCancelled = () -> isCancelled(holder, status);
-        } else {
-            isCancelled = FALSE_SUPPLIER;
-        }
-
-//        ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
-//        for (int x = target.x - radius; x <= target.x + radius; x++)
-//            for (int z = target.z - radius; z <= target.z + radius; z++)
-//                fetchedLocks.add(new ChunkPos(x, z));
-//
-//        final SchedulingAsyncCombinedLock<T> task = new SchedulingAsyncCombinedLock<>(
-//                chunkLock,
-//                target.toLong(),
-//                new HashSet<>(fetchedLocks),
-//                isCancelled,
-//                schedulingManager::enqueue,
-//                action,
-//                target.toString(),
-//                async);
-
         final int diameter = 2 * radius + 1;
         final long[] lockTargets = new long[diameter * diameter];
         int index = 0;
@@ -79,7 +49,6 @@ public class ChunkStatusUtils {
                 schedulingManager,
                 target.toLong(),
                 lockTargets,
-                isCancelled,
                 action,
                 target + " " + status,
                 async

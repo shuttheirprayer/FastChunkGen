@@ -1,6 +1,5 @@
 package com.misanthropy.fastchunkgen.opts.allocs.mixin;
 
-import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +25,8 @@ public class MixinNbtCompound {
      */
     @Overwrite
     public CompoundTag copy() {
-        Map<String, Tag> map = new Object2ObjectOpenHashMap<>(Maps.transformValues(this.tags, Tag::copy));
+        final Map<String, Tag> map = new Object2ObjectOpenHashMap<>(this.tags.size());
+        this.tags.forEach((key, value) -> map.put(key, value.copy()));
         return new CompoundTag(map);
     }
 

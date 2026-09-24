@@ -2,7 +2,7 @@
   "parent": "fastchunkgen.mixins.json",
   "required": true,
   "package": "com.misanthropy.fastchunkgen.threading.worldgen.mixin",
-  "plugin": "com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin",
+  "plugin": "com.misanthropy.fastchunkgen.threading.worldgen.MixinPlugin",
   "refmap": "fastchunkgen.refmap.json",
   "mixins": [
     "MixinChunkGenerator",
@@ -12,7 +12,6 @@
     "MixinNoiseChunkGenerator",
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage",
-    "cancellation.MixinChunkHolder",
     "cancellation.MixinThreadedAnvilChunkStorage",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]

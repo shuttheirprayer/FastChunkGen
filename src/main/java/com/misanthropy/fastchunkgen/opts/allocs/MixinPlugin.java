@@ -12,6 +12,8 @@ public class MixinPlugin extends ModuleMixinPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (!super.shouldApplyMixin(targetClassName, mixinClassName)) return false;
 
+        if (mixinClassName.equals(PACKAGE + "MixinNbtCompound") && ModUtil.isModLoaded("recoleta")) return false;
+
         if (mixinClassName.equals(PACKAGE + "MixinNbtCompound") || mixinClassName.equals(PACKAGE + "MixinNbtList")) {
             return !ModCompat.isLithiumFamilyPresent();
         }

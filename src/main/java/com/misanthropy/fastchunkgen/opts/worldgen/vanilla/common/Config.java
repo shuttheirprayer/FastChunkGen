@@ -25,4 +25,9 @@ public class Config {
             .comment("Skip the NoiseChunk wrapper map for density functions it would hand straight back. Only marker nodes own a cache that has to be shared.")
             .getBoolean(true, false);
 
+    public static final boolean identityPreservingDensityFunctionMapAll = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.identityPreservingDensityFunctionMapAll")
+            .comment("Reuse density function nodes whose inputs did not change when a chunk maps the noise router instead of rebuilding every node per chunk, and skip the throwaway holder pair NoiseChunk unwraps immediately.")
+            .getBoolean(true, false);
+
 }

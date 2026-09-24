@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class StacktraceRecorder {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final boolean doRecord = Config.reduceLockRadius && Boolean.getBoolean("com.misanthropy.fastchunkgen.common.threading.worldgen.debug.DebugReducedLockRadius");
     private static final int recordFrequency = Mth.clamp(Integer.getInteger("com.misanthropy.fastchunkgen.common.threading.worldgen.debug.DebugReducedLockRadiusFrequency", 4), 1, 16);
     private static final long frequencyBitMask = (1L << recordFrequency) - 1;
 
@@ -31,7 +30,7 @@ public class StacktraceRecorder {
     private static final AtomicLong sampledCount = new AtomicLong();
 
     public static void record() {
-        if (!doRecord) return;
+        if (!Config.debugReducedLockRadius) return;
         if ((sampledCount.incrementAndGet() & frequencyBitMask) != 0) return;
         final StacktraceHolder stacktraceHolder = new StacktraceHolder();
         if (recordedStacktraces.add(stacktraceHolder)) {

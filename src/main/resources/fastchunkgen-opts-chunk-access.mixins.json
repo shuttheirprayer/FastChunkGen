@@ -2,7 +2,7 @@
   "parent": "fastchunkgen.mixins.json",
   "required": true,
   "package": "com.misanthropy.fastchunkgen.opts.chunk_access.mixin",
-  "plugin": "com.misanthropy.fastchunkgen.opts.chunk_access.MixinPlugin",
+  "plugin": "com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin",
   "refmap": "fastchunkgen.refmap.json",
   "mixins": [
     "async_chunk_request.MixinServerChunkManager",

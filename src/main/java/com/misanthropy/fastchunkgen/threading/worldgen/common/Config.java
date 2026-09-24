@@ -15,6 +15,9 @@ public class Config {
             .comment("Lock fewer neighbouring chunks per generation step. More parallelism.")
             .getBoolean(true, false);
 
+    public static final boolean debugReducedLockRadius = reduceLockRadius
+            && Boolean.getBoolean("com.misanthropy.fastchunkgen.common.threading.worldgen.debug.DebugReducedLockRadius");
+
     public static final boolean asyncScheduling = new ConfigSystem.ConfigAccessor()
             .key("threadedWorldGen.asyncScheduling")
             .comment("Schedule generation tasks off the server thread.")

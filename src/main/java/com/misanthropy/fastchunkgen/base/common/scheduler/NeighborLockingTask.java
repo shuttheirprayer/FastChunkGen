@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class NeighborLockingTask<T> implements ScheduledTask {
@@ -16,18 +15,16 @@ public class NeighborLockingTask<T> implements ScheduledTask {
     private final SchedulingManager schedulingManager;
     private final long center;
     private final long[] names;
-    private final BooleanSupplier isCancelled;
     private final Supplier<CompletableFuture<T>> action;
     private final String desc;
     private final boolean async;
     private final CompletableFuture<T> future = new CompletableFuture<>();
     private boolean acquired = false;
 
-    public NeighborLockingTask(SchedulingManager schedulingManager, long center, long[] names, BooleanSupplier isCancelled, Supplier<CompletableFuture<T>> action, String desc, boolean async) {
+    public NeighborLockingTask(SchedulingManager schedulingManager, long center, long[] names, Supplier<CompletableFuture<T>> action, String desc, boolean async) {
         this.schedulingManager = schedulingManager;
         this.center = center;
         this.names = names;
-        this.isCancelled = isCancelled;
         this.action = action;
         this.desc = desc;
         this.async = async;

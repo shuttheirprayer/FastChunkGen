@@ -23,6 +23,10 @@ public class MixinPlugin extends ModuleMixinPlugin {
             return Config.skipRedundantDensityFunctionWrapping
                     && !ModCompat.isModernFixFeatureEnabled("mixin.perf.worldgen_allocation");
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_function_identity."))
+            return Config.identityPreservingDensityFunctionMapAll
+                    && !ModCompat.isModernFixFeatureEnabled("mixin.perf.worldgen_allocation");
+
         return true;
     }
 }

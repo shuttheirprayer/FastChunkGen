@@ -1,10 +1,9 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_function_hash;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(targets = {
         "net.minecraft.util.CubicSpline$Multipoint",
@@ -28,17 +27,15 @@ public abstract class MixinCachedRecordHash {
     @Unique
     private int fastchunkgen$hash;
 
-    @Inject(method = "hashCode", at = @At("HEAD"), cancellable = true)
-    private void onHashCodeHead(CallbackInfoReturnable<Integer> cir) {
-        final int cached = this.fastchunkgen$hash;
+    @WrapMethod(method = "hashCode")
+    private int fastchunkgen$cachedHash(Operation<Integer> original) {
+        int cached = this.fastchunkgen$hash;
         if (cached != 0) {
-            cir.setReturnValue(cached);
+            return cached;
         }
-    }
-
-    @Inject(method = "hashCode", at = @At("RETURN"))
-    private void onHashCodeReturn(CallbackInfoReturnable<Integer> cir) {
-        this.fastchunkgen$hash = cir.getReturnValue();
+        int computed = original.call();
+        this.fastchunkgen$hash = computed;
+        return computed;
     }
 
 }

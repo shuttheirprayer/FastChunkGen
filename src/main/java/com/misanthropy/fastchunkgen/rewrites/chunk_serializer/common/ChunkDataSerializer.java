@@ -11,7 +11,6 @@ import com.misanthropy.fastchunkgen.base.mixin.access.ISimpleTickScheduler;
 import com.misanthropy.fastchunkgen.base.mixin.access.IState;
 import com.misanthropy.fastchunkgen.base.mixin.access.IStructurePiece;
 import com.misanthropy.fastchunkgen.base.mixin.access.IStructureStart;
-import com.misanthropy.fastchunkgen.base.mixin.access.IUpgradeData;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortIterator;
@@ -20,7 +19,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Direction8;
 import net.minecraft.core.Holder;
 import net.minecraft.core.IdMap;
 import net.minecraft.core.Registry;
@@ -94,7 +92,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_STATUS = NbtWriter.getAsciiStringBytes("Status");
     private static final byte[] STRING_BLENDING_DATA = NbtWriter.getAsciiStringBytes("blending_data");
     private static final byte[] STRING_BELOW_ZERO_RETROGEN = NbtWriter.getAsciiStringBytes("below_zero_retrogen");
-    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("upgrade_data");
+    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("UpgradeData");
     private static final byte[] STRING_IS_LIGHT_ON = NbtWriter.getAsciiStringBytes("isLightOn");
     private static final byte[] STRING_BLOCK_ENTITIES = NbtWriter.getAsciiStringBytes("block_entities");
     private static final byte[] STRING_PALETTE = NbtWriter.getAsciiStringBytes("palette");
@@ -110,8 +108,6 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_MAX_SECTION = NbtWriter.getAsciiStringBytes("max_section");
     private static final byte[] STRING_TARGET_STATUS = NbtWriter.getAsciiStringBytes("target_status");
     private static final byte[] STRING_MISSING_BEDROCK = NbtWriter.getAsciiStringBytes("missing_bedrock");
-    private static final byte[] STRING_INDICES = NbtWriter.getAsciiStringBytes("Indices");
-    private static final byte[] STRING_SIDES = NbtWriter.getAsciiStringBytes("Sides");
     private static final byte[] STRING_ENTITIES = NbtWriter.getAsciiStringBytes("entities");
     private static final byte[] STRING_LIGHTS = NbtWriter.getAsciiStringBytes("Lights");
     private static final byte[] STRING_CARVING_MASKS = NbtWriter.getAsciiStringBytes("CarvingMasks");
@@ -194,10 +190,7 @@ public final class ChunkDataSerializer {
 
         UpgradeData upgradeData = chunk.getUpgradeData();
         if (!upgradeData.isEmpty()) {
-            // Inline serialization
-            writer.startCompound(STRING_UPGRADE_DATA);
-            writeUpgradeData(writer, (IUpgradeData) upgradeData);
-            writer.finishCompound();
+            writer.putElement(STRING_UPGRADE_DATA, upgradeData.write());
         }
 
         LevelChunkSection[] chunkSections = chunk.getSections();
@@ -578,37 +571,6 @@ public final class ChunkDataSerializer {
         }
     }
 
-
-    private static void writeUpgradeData(NbtWriter writer, IUpgradeData upgradeData) {
-        long indicesStart = -1;
-        int indicesCount = 0;
-
-        int[][] centerIndicesToUpgrade = upgradeData.getCenterIndicesToUpgrade();
-
-        for (int i = 0; i < centerIndicesToUpgrade.length; ++i) {
-            if (centerIndicesToUpgrade[i] != null && centerIndicesToUpgrade[i].length != 0) {
-                String string = String.valueOf(i);
-                if (indicesStart == -1) {
-                    indicesStart = writer.startList(STRING_INDICES, Tag.TAG_INT_ARRAY);
-                }
-                indicesCount++;
-                // TODO: cache this
-                writer.putIntArray(NbtWriter.getAsciiStringBytes(string), centerIndicesToUpgrade[i]);
-            }
-        }
-
-        if (indicesStart != -1) {
-            writer.finishList(indicesStart, indicesCount);
-        }
-
-        int i = 0;
-
-        for (Direction8 eightWayDirection : upgradeData.getSidesToUpgrade()) {
-            i |= 1 << eightWayDirection.ordinal();
-        }
-
-        writer.putByte(STRING_SIDES, (byte) i);
-    }
 
     /**
      * mirror of {@link ChunkSerializer#saveTicks(ServerLevel, CompoundTag, ChunkAccess.TicksToSave)}

@@ -8,6 +8,12 @@
     "aquifer.MixinAquiferSamplerImpl",
     "aquifer.MixinNoiseChunkGenerator",
     "density_function_hash.MixinCachedRecordHash",
+    "density_function_hash.MixinCachedRecordHashLithoform",
+    "density_function_identity.MixinAp2",
+    "density_function_identity.MixinHolderHolder",
+    "density_function_identity.MixinMapped",
+    "density_function_identity.MixinMulOrAdd",
+    "density_function_identity.MixinNoise",
     "noise_chunk_wrap.MixinNoiseChunk",
     "the_end_biome_cache.MixinTheEndBiomeSource"
   ]

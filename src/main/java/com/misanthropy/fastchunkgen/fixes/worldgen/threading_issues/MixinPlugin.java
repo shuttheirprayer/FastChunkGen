@@ -4,7 +4,6 @@ import com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin;
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.debug.SMAPPool;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
 import org.spongepowered.asm.mixin.transformer.ext.Extensions;
 import org.spongepowered.asm.mixin.transformer.ext.IExtension;
@@ -45,14 +44,5 @@ public class MixinPlugin extends ModuleMixinPlugin {
         } else {
             LOGGER.warn("Failed to initialize SMAP parser for safe world random access, mod information for mixin injected methods will not be available");
         }
-    }
-
-    @Override
-    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
-//        ASMTransformerMakeVolatile.transform(targetClass); // SJhub - I don't need this on forge
-    }
-
-    @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 }
