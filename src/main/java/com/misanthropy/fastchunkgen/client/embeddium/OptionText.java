@@ -19,6 +19,8 @@ class OptionText {
         TOOLTIPS.put("threadedWorldGen.reduceLockRadius", "Lock fewer neighbouring chunks per generation step for more parallelism.");
         NAMES.put("threadedWorldGen.asyncScheduling", "Async Scheduling");
         TOOLTIPS.put("threadedWorldGen.asyncScheduling", "Schedule generation tasks off the server thread.");
+        NAMES.put("maxViewDistance", "Max Render Distance");
+        TOOLTIPS.put("maxViewDistance", "Raises the 32 chunk render distance cap. Needs a restart and much more memory at high values.");
         NAMES.put("threadedLighting.enabled", "Threaded Lighting");
         TOOLTIPS.put("threadedLighting.enabled", "Run light updates on a dedicated thread.");
         NAMES.put("ioSystem.async", "Async Chunk IO");

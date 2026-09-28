@@ -48,7 +48,8 @@ def mixinConfigs = [
         "${mod_id}-rewrites-chunkio.mixins.json",
         "${mod_id}-threading-chunkio.mixins.json",
         "${mod_id}-threading-lighting.mixins.json",
-        "${mod_id}-threading-worldgen.mixins.json"
+        "${mod_id}-threading-worldgen.mixins.json",
+        "${mod_id}-uncapvd.mixins.json"
 ]
 
 minecraft {

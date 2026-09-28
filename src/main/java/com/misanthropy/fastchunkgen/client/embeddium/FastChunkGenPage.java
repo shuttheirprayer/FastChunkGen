@@ -34,6 +34,7 @@ public class FastChunkGenPage extends OptionPage {
                 .add(OptionFactory.bool("threadedWorldGen.reduceLockRadius", true))
                 .add(OptionFactory.bool("threadedWorldGen.asyncScheduling", true))
                 .add(OptionFactory.bool("threadedLighting.enabled", true))
+                .add(OptionFactory.slider("maxViewDistance", 32, 32, 125, 1, ControlValueFormatter.number()))
                 .build());
 
         groups.add(OptionGroup.createBuilder()

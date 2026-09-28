@@ -1,0 +1,15 @@
+{
+  "parent": "fastchunkgen.mixins.json",
+  "required": true,
+  "package": "com.misanthropy.fastchunkgen.uncapvd.mixin",
+  "plugin": "com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin",
+  "refmap": "fastchunkgen.refmap.json",
+  "mixins": [
+    "MixinChunkMap",
+    "MixinChunkTaskPriorityQueue",
+    "MixinDistanceManager"
+  ],
+  "client": [
+    "MixinOptions"
+  ]
+}

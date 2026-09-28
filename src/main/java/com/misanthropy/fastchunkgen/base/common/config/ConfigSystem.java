@@ -342,10 +342,10 @@ public class ConfigSystem {
                 return value >= 1 && value <= 0x7fff;
             }
         },
-        NO_TICK_VIEW_DISTANCE() {
+        VIEW_DISTANCE() {
             @Override
             public boolean test(long value) {
-                return value >= 2 && value <= 248;
+                return value >= 32 && value <= 125;
             }
         },
         POSITIVE_VALUES_ONLY() {
