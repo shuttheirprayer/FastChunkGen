@@ -7,7 +7,7 @@ public class Config {
     public static final boolean recoverFromErrors = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.recoverFromErrors")
             .comment("Regenerate chunks that fail to load. Destroys their contents.")
-            .getBoolean(false, false);
+            .getBoolean(true, true);
 
     public static final boolean fireForgeChunkDataEvents = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.fireForgeChunkDataEvents")

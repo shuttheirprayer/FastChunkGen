@@ -63,7 +63,7 @@ experimental or breaks other mods. don't touch unless u know what u doing.
 | Key | Default | Why is off                                                                                                                                                                            |
 | --- | --- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ioSystem.gcFreeChunkSerializer` | `false` | Writes raw NBT bytes. **Breaks `ChunkDataEvent.Save`**, so mods saving extra chunk data via Forge capabilities lose everything.                                                       |
-| `ioSystem.recoverFromErrors` | `false` | Just regens chunks that fail to load instead of crashing. Probably will cause silent data loss                                                                                        |
+| `ioSystem.recoverFromErrors` | `true`  | Regens chunks that fail to load instead of crashing. Its just like vanilla                                                                                                            |
 | `fixes.enforceSafeWorldRandomAccess` | `false` | Crashes the game instead of logging a warning when a mod touches world random off-thread. Useful for finding broken mods. But generally it will just annoy long-term running servers. |
 
 ## Mod Compatibility

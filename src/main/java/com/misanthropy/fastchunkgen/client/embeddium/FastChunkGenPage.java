@@ -86,7 +86,7 @@ public class FastChunkGenPage extends OptionPage {
 
         groups.add(OptionGroup.createBuilder()
                 .add(OptionFactory.bool("ioSystem.gcFreeChunkSerializer", false))
-                .add(OptionFactory.bool("ioSystem.recoverFromErrors", false))
+                .add(OptionFactory.bool("ioSystem.recoverFromErrors", true))
                 .build());
 
         return ImmutableList.copyOf(groups);
