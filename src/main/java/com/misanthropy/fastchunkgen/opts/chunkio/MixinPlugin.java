@@ -12,6 +12,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.chunkio.mixin.compression.modify_default_chunk_compression"))
             return Config.chunkStreamVersion != -1;
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.chunkio.mixin.skip_missing_external_chunk_delete."))
+            return Config.skipMissingExternalChunkDelete;
+
         return true;
     }
 }

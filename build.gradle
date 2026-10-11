@@ -163,6 +163,7 @@ def shadeSpec = { Jar task ->
 
 tasks.named('jarJar', Jar).configure {
     shadeSpec(it)
+    finalizedBy 'reobfJarJar'
 }
 
 tasks.named('jar', Jar).configure {

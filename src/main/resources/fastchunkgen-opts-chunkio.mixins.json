@@ -7,6 +7,7 @@
   "mixins": [
     "compression.modify_default_chunk_compression.MixinRegionFile",
     "hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
-    "limit_nbt_cache.MixinStorageIoWorker"
+    "limit_nbt_cache.MixinStorageIoWorker",
+    "skip_missing_external_chunk_delete.MixinRegionFile"
   ]
 }

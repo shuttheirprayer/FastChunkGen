@@ -23,6 +23,11 @@ public class Config {
             .comment("Compression for newly saved chunks. -1 vanilla, 1 GZip, 2 Zlib, 3 none. Existing chunks stay readable.")
             .getLong(-1, -1);
 
+    public static final boolean skipMissingExternalChunkDelete = new ConfigSystem.ConfigAccessor()
+            .key("ioSystem.skipMissingExternalChunkDelete")
+            .comment("Check that the oversized chunk file exists before deleting it after each chunk save. Avoids an internal exception per save on Windows.")
+            .getBoolean(true, false);
+
     public static void init() {
     }
 
