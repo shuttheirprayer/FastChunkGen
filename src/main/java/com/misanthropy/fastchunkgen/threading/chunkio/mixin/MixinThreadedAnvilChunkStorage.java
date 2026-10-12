@@ -267,7 +267,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage implem
     }
 
     private CompletableFuture<Optional<CompoundTag>> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
-        return readChunk(pos);
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> {
+            try {
+                return readChunk(pos).whenComplete((unused, throwable) -> lockToken.releaseLock());
+            } catch (RuntimeException | Error t) {
+                lockToken.releaseLock();
+                throw t;
+            }
+        });
     }
 
     /**
@@ -359,7 +366,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage implem
                         CompletableFuture.supplyAsync(() -> {
                                     scope.open();
                                     if (holder.getChunkToSave() != originalSavingFuture) {
-                                        this.mainThreadExecutor.execute(() -> asyncSave(tacs, chunk, holder));
+                                        this.mainThreadExecutor.execute(() -> {
+                                            chunk.setUnsaved(true);
+                                            asyncSave(tacs, chunk, holder);
+                                        });
                                         throw new TaskCancellationException();
                                     }
                                     AsyncSerializationManager.push(scope);
