@@ -6,6 +6,7 @@
   "refmap": "fastchunkgen.refmap.json",
   "mixins": [
     "compat.MixinBlueprintTreeFeature",
+    "compat.MixinTFCavesCarver",
     "deadlocks.MixinDataFixerType",
     "threading.MixinDesertTempleGenerator",
     "threading.MixinJungleTempleGenerator",
