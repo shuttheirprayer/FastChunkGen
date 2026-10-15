@@ -120,17 +120,22 @@ public class SchedulingManager {
 
     private void scheduleExecution() {
         if (scheduledCount.get() < maxScheduled && scheduled.compareAndSet(false, true)) {
-            this.executor.execute(() -> {
-                try {
-                    while (scheduledCount.get() < maxScheduled && scheduleExecutionInternal()) {
-                        scheduledCount.incrementAndGet();
-                    }
-                } catch (Throwable t) {
-                    LOGGER.error("Error while scheduling chunk tasks", t);
-                } finally {
-                    scheduled.set(false);
+            this.executor.execute(this::drainQueue);
+        }
+    }
+
+    private void drainQueue() {
+        try {
+            while (true) {
+                while (scheduledCount.get() < maxScheduled && queue.size() != 0) {
+                    if (scheduleExecutionInternal()) scheduledCount.incrementAndGet();
                 }
-            });
+                scheduled.set(false);
+                if (queue.size() == 0 || scheduledCount.get() >= maxScheduled || !scheduled.compareAndSet(false, true)) return;
+            }
+        } catch (Throwable t) {
+            scheduled.set(false);
+            LOGGER.error("Error while scheduling chunk tasks", t);
         }
     }
 
@@ -155,7 +160,7 @@ public class SchedulingManager {
     private boolean schedule0(ScheduledTask task) {
         if (task.tryPrepare()) {
             task.runTask(() -> {
-                scheduledCount.decrementAndGet();
+                if (!task.isAsync()) scheduledCount.decrementAndGet(); // async tasks skip the queue
                 scheduleExecution();
             });
             return true;

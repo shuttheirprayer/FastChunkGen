@@ -11,6 +11,39 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class MixinPerlinNoiseSampler {
 
     @Shadow @Final private byte[] p;
+    @Shadow @Final public double xo;
+    @Shadow @Final public double yo;
+    @Shadow @Final public double zo;
+
+    /**
+     * @author Misanthropy
+     * @reason faster floor
+     */
+    @Overwrite
+    public double noise(double x, double y, double z, double yScale, double yMax) {
+        final double shiftedX = x + this.xo;
+        final double shiftedY = y + this.yo;
+        final double shiftedZ = z + this.zo;
+        final int sectionX = fcg$floor(shiftedX);
+        final int sectionY = fcg$floor(shiftedY);
+        final int sectionZ = fcg$floor(shiftedZ);
+        final double localX = shiftedX - (double) sectionX;
+        final double localY = shiftedY - (double) sectionY;
+        final double localZ = shiftedZ - (double) sectionZ;
+        final double yFloor;
+        if (yScale != 0.0D) {
+            final double clampedY = yMax >= 0.0D && yMax < localY ? yMax : localY;
+            yFloor = (double) fcg$floor(clampedY / yScale + (double) 1.0E-7F) * yScale;
+        } else {
+            yFloor = 0.0D;
+        }
+        return this.sampleAndLerp(sectionX, sectionY, sectionZ, localX, localY - yFloor, localZ, localY);
+    }
+
+    @Unique
+    private static int fcg$floor(double value) {
+        return value < -2147483648.0D ? Integer.MAX_VALUE : (int) Math.floor(value);
+    }
 
     @Unique
     private static final double[] FLAT_SIMPLEX_GRAD = new double[]{

@@ -1,15 +1,16 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.aquifer;
 
 import com.misanthropy.fastchunkgen.opts.worldgen.general.common.random_instances.RandomUtils;
+import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.CellBounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.biome.OverworldBiomeBuilder;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.NoiseChunk;
 import net.minecraft.world.level.levelgen.PositionalRandomFactory;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -21,8 +22,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Arrays;
+
 @Mixin(Aquifer.NoiseBasedAquifer.class)
-public class MixinAquiferSamplerImpl {
+public class MixinAquiferSamplerImpl implements CellBounds.HighAir {
 
     @Unique
     private static final int WATER_LEVEL_MAGIC_1 = 64 - BlockPos.X_OFFSET - BlockPos.PACKED_X_LENGTH;
@@ -66,27 +69,11 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private static int[][] SURFACE_SAMPLING_OFFSETS_IN_CHUNKS;
-
-    @Shadow
-    @Final
-    private NoiseChunk noiseChunk;
-
-    @Shadow
-    @Final
     private DensityFunction barrierNoise;
 
-    @Shadow
-    @Final
-    private DensityFunction fluidLevelFloodednessNoise;
-
-    @Shadow
-    @Final
-    private DensityFunction fluidLevelSpreadNoise;
-
-    @Shadow
-    @Final
-    private DensityFunction lavaNoise;
+    @Shadow @Final private DensityFunction fluidLevelFloodednessNoise;
+    @Shadow @Final private DensityFunction erosion;
+    @Shadow @Final private DensityFunction depth;
 
     @Shadow
     @Final
@@ -102,9 +89,14 @@ public class MixinAquiferSamplerImpl {
     @Unique
     private RandomSource randomInstance;
 
+    @Unique
+    private int[] fcg$maxFluidLevels;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.randomInstance = RandomUtils.getRandom(this.positionalRandomFactory);
+        this.fcg$maxFluidLevels = new int[this.aquiferLocationCache.length];
+        Arrays.fill(this.fcg$maxFluidLevels, Integer.MIN_VALUE);
     }
 
     /**
@@ -129,6 +121,10 @@ public class MixinAquiferSamplerImpl {
                 int l = Math.floorDiv(blockX - 5, 16);
                 int m = Math.floorDiv(blockY + 1, 12);
                 int n = Math.floorDiv(blockZ - 5, 16);
+                if (blockY - 5 >= fluidLevel.fluidLevel && blockY - 5 >= this.fcg$maxFluidLevel(l, m, n)) {
+                    this.shouldScheduleFluidUpdate = this.fcg$highAirFluidUpdate(blockX, blockY, blockZ, l, m, n);
+                    return Blocks.AIR.defaultBlockState();
+                }
                 int o = Integer.MAX_VALUE;
                 int p = Integer.MAX_VALUE;
                 int q = Integer.MAX_VALUE;
@@ -139,23 +135,7 @@ public class MixinAquiferSamplerImpl {
                 for (int u = 0; u <= 1; ++u) {
                     for (int v = -1; v <= 1; ++v) {
                         for (int w = 0; w <= 1; ++w) {
-                            int x = l + u;
-                            int y = m + v;
-                            int z = n + w;
-                            int aa = ((y - this.minGridY) * this.gridSizeZ + z - this.minGridZ) * this.gridSizeX + x - this.minGridX;
-                            long ab = this.aquiferLocationCache[aa];
-                            long ac;
-                            if (ab != Long.MAX_VALUE) {
-                                ac = ab;
-                            } else {
-                                // C2ME - reuse random instance
-                                RandomUtils.derive(this.positionalRandomFactory, this.randomInstance, x, y, z);
-                                final int i1 = randomInstance.nextInt(10);
-                                final int i2 = randomInstance.nextInt(9);
-                                final int i3 = randomInstance.nextInt(10);
-                                ac = BlockPos.asLong(x * 16 + i1, y * 12 + i2, z * 16 + i3);
-                                this.aquiferLocationCache[aa] = ac;
-                            }
+                            long ac = this.fcg$location(l + u, m + v, n + w);
 
                             int ad = (int) ((ac << WATER_LEVEL_MAGIC_1) >> WATER_LEVEL_MAGIC_2) - blockX; // C2ME - inline
                             int ae = (int) ((ac << WATER_LEVEL_MAGIC_3) >> WATER_LEVEL_MAGIC_4) - blockY; // C2ME - inline
@@ -342,6 +322,87 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    @Unique
+    private long fcg$location(int x, int y, int z) {
+        int index = ((y - this.minGridY) * this.gridSizeZ + z - this.minGridZ) * this.gridSizeX + x - this.minGridX;
+        long location = this.aquiferLocationCache[index];
+        if (location == Long.MAX_VALUE) {
+            // C2ME - reuse random instance
+            RandomUtils.derive(this.positionalRandomFactory, this.randomInstance, x, y, z);
+            final int i1 = randomInstance.nextInt(10);
+            final int i2 = randomInstance.nextInt(9);
+            final int i3 = randomInstance.nextInt(10);
+            location = BlockPos.asLong(x * 16 + i1, y * 12 + i2, z * 16 + i3);
+            this.aquiferLocationCache[index] = location;
+        }
+        return location;
+    }
+
+    @Unique
+    private int fcg$maxFluidLevel(int l, int m, int n) {
+        int index = ((m - this.minGridY) * this.gridSizeZ + n - this.minGridZ) * this.gridSizeX + l - this.minGridX;
+        int max = this.fcg$maxFluidLevels[index];
+        if (max == Integer.MIN_VALUE) {
+            for (int u = 0; u <= 1; ++u) {
+                for (int v = -1; v <= 1; ++v) {
+                    for (int w = 0; w <= 1; ++w) {
+                        max = Math.max(max, this.getAquiferStatus(this.fcg$location(l + u, m + v, n + w)).fluidLevel);
+                    }
+                }
+            }
+            this.fcg$maxFluidLevels[index] = max;
+        }
+        return max;
+    }
+
+    // above every nearby fluid level vanilla reaches its end with AIR (all pressures negative) and sets the flag from the two nearest aquifer centers
+    @Unique
+    private boolean fcg$highAirFluidUpdate(int blockX, int blockY, int blockZ, int l, int m, int n) {
+        int o = Integer.MAX_VALUE;
+        int p = Integer.MAX_VALUE;
+        for (int u = 0; u <= 1; ++u) {
+            for (int v = -1; v <= 1; ++v) {
+                for (int w = 0; w <= 1; ++w) {
+                    long ac = this.fcg$location(l + u, m + v, n + w);
+                    int ad = (int) ((ac << WATER_LEVEL_MAGIC_1) >> WATER_LEVEL_MAGIC_2) - blockX;
+                    int ae = (int) ((ac << WATER_LEVEL_MAGIC_3) >> WATER_LEVEL_MAGIC_4) - blockY;
+                    int af = (int) ((ac << WATER_LEVEL_MAGIC_5) >> WATER_LEVEL_MAGIC_6) - blockZ;
+                    int ag = ad * ad + ae * ae + af * af;
+                    if (o >= ag) {
+                        p = o;
+                        o = ag;
+                    } else if (p >= ag) {
+                        p = ag;
+                    }
+                }
+            }
+        }
+        return 1.0 - Math.abs(p - o) / 25.0 >= FLOWING_UPDATE_SIMULARITY;
+    }
+
+    @Override
+    public void fcg$skippedCell(boolean solid, int lastX, int lastY, int lastZ) {
+        this.shouldScheduleFluidUpdate = !solid && this.fcg$highAirFluidUpdate(lastX, lastY, lastZ,
+                Math.floorDiv(lastX - 5, 16), Math.floorDiv(lastY + 1, 12), Math.floorDiv(lastZ - 5, 16));
+    }
+
+    @Override
+    public boolean fcg$allHighAir(int minX, int minY, int minZ, int sizeXZ, int sizeY) {
+        for (int y = minY; y < minY + sizeY; y++) {
+            final int m = Math.floorDiv(y + 1, 12);
+            for (int x = minX; x < minX + sizeXZ; x++) {
+                final int l = Math.floorDiv(x - 5, 16);
+                for (int z = minZ; z < minZ + sizeXZ; z++) {
+                    if (y - 5 < this.globalFluidPicker.computeFluid(x, y, z).fluidLevel
+                            || y - 5 < this.fcg$maxFluidLevel(l, m, Math.floorDiv(z - 5, 16))) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * @author ishland
      * @reason optimize
@@ -365,92 +426,31 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    // vanilla computeFluid: the C2ME copy skipped the 1.19+ deep dark check and picked lava from the level before min(surface)
+    @Shadow
+    private Aquifer.FluidStatus computeFluid(int x, int y, int z) {
+        throw new AssertionError();
+    }
+
+    @Shadow
+    private int computeRandomizedFluidSurfaceLevel(int x, int y, int z, int minSurface) {
+        throw new AssertionError();
+    }
+
     /**
-     * @author ishland
-     * @reason optimize
+     * @author Misanthropy
+     * @reason floodedness first: vanilla's deep dark branch lands on WAY_BELOW_MIN_Y like a dry cell, so erosion and depth only matter for wet ones
      */
     @Overwrite
-    private Aquifer.FluidStatus computeFluid(int i, int j, int k) {
-        Aquifer.FluidStatus fluidLevel = this.globalFluidPicker.computeFluid(i, j, k);
-        int l = Integer.MAX_VALUE;
-        int m = j + 12;
-        int n = j - 12;
-        boolean bl = false;
-
-        for (int[] is : SURFACE_SAMPLING_OFFSETS_IN_CHUNKS) {
-            int o = i + (is[0] << 4); // C2ME - inline
-            int p = k + (is[1] << 4); // C2ME - inline
-            int q = this.noiseChunk.preliminarySurfaceLevel(o, p);
-            int r = q + 8;
-            boolean bl2 = is[0] == 0 && is[1] == 0;
-            if (bl2 && n > r) {
-                return fluidLevel;
-            }
-
-            boolean bl3 = m > r;
-            if (bl2 || bl3) {
-                Aquifer.FluidStatus fluidLevel2 = this.globalFluidPicker.computeFluid(o, r, p);
-                if (!fluidLevel2.at(r).isAir()) {
-                    if (bl2) {
-                        bl = true;
-                    }
-
-                    if (bl3) {
-                        return fluidLevel2;
-                    }
-                }
-            }
-
-            l = Math.min(l, q);
-        }
-
-        int s = l + 8 - j;
-        double d = bl ? clampedLerpFromProgressInlined(s) : 0.0;
-        double e = Mth.clamp(this.fluidLevelFloodednessNoise.compute(new DensityFunction.SinglePointContext(i, j, k)), -1.0, 1.0);
-        double f = lerpFromProgressInlined(d, -0.3, 0.8);
-        if (e > f) {
-            return fluidLevel;
-        } else {
-            double g = lerpFromProgressInlined(d, -0.8, 0.4);
-            if (e <= g) {
-                return new Aquifer.FluidStatus(DimensionType.WAY_BELOW_MIN_Y, fluidLevel.fluidType);
-            } else {
-                int w = Math.floorDiv(i, 16);
-                int x = Math.floorDiv(j, 40);
-                int y = Math.floorDiv(k, 16);
-                int z = x * 40 + 20;
-                double h = this.fluidLevelSpreadNoise.compute(new DensityFunction.SinglePointContext(w, x, y)) * 10.0;
-                int ab = Mth.quantize(h, 3);
-                int ac = z + ab;
-                int ad = Math.min(l, ac);
-                if (ac <= -10) {
-                    int ag = Math.floorDiv(i, 64);
-                    int ah = Math.floorDiv(j, 40);
-                    int ai = Math.floorDiv(k, 64);
-                    double aj = this.lavaNoise.compute(new DensityFunction.SinglePointContext(ag, ah, ai));
-                    if (Math.abs(aj) > 0.3) {
-                        return new Aquifer.FluidStatus(ad, Blocks.LAVA.defaultBlockState());
-                    }
-                }
-
-                return new Aquifer.FluidStatus(ad, fluidLevel.fluidType);
-            }
-        }
-    }
-
-    @Unique
-    private static double clampedLerpFromProgressInlined(double lerpValue) {
-        final double delta = lerpValue / 64.0;
-        if (delta < 0.0) {
-            return 1.0;
-        } else {
-            return delta > 1.0 ? 0.0 : 1.0 - delta;
-        }
-    }
-
-    @Unique
-    private static double lerpFromProgressInlined(double lerpValue, double start, double end) {
-        return start - (lerpValue - 1.0) * (end - start);
+    private int computeSurfaceLevel(int x, int y, int z, Aquifer.FluidStatus status, int minSurface, boolean fluidAtSurface) {
+        final DensityFunction.SinglePointContext context = new DensityFunction.SinglePointContext(x, y, z);
+        final double fill = fluidAtSurface ? Mth.clampedMap((double) (minSurface + 8 - y), 0.0D, 64.0D, 1.0D, 0.0D) : 0.0D;
+        final double floodedness = Mth.clamp(this.fluidLevelFloodednessNoise.compute(context), -1.0D, 1.0D);
+        final double full = floodedness - Mth.map(fill, 1.0D, 0.0D, -0.3D, 0.8D);
+        final double partial = floodedness - Mth.map(fill, 1.0D, 0.0D, -0.8D, 0.4D);
+        if (!(full > 0.0D) && !(partial > 0.0D)) return DimensionType.WAY_BELOW_MIN_Y;
+        if (OverworldBiomeBuilder.isDeepDarkRegion(this.erosion, this.depth, context)) return DimensionType.WAY_BELOW_MIN_Y;
+        return full > 0.0D ? status.fluidLevel : this.computeRandomizedFluidSurfaceLevel(x, y, z, minSurface);
     }
 
 }
