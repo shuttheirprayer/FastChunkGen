@@ -6,7 +6,7 @@ public class Config {
 
     public static final boolean enforceSafeWorldRandomAccess = new ConfigSystem.ConfigAccessor()
             .key("fixes.enforceSafeWorldRandomAccess")
-            .comment("Crash instead of warn when something uses the world random off-thread. For debugging.")
+            .comment("Crash instead of warn. Mainly for debugging.")
             .getBoolean(false, false);
 
     public static void init() {

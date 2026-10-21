@@ -17,12 +17,12 @@ public class Config {
 
     public static final boolean cacheDensityFunctionHashes = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.cacheDensityFunctionHashes")
-            .comment("Cache the hashCode of density function and spline records. They are immutable, so the value never changes.")
+            .comment("Cache the hashCode of density function and spline records. Their value never changes anyways!")
             .getBoolean(true, false);
 
     public static final boolean skipRedundantDensityFunctionWrapping = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.skipRedundantDensityFunctionWrapping")
-            .comment("Skip the NoiseChunk wrapper map for density functions it would hand straight back. Only marker nodes own a cache that has to be shared.")
+            .comment("Skip the NoiseChunk wrapper map for density functions.")
             .getBoolean(true, false);
 
     public static final boolean shareNoiseBetweenChunks = new ConfigSystem.ConfigAccessor()
@@ -32,7 +32,12 @@ public class Config {
 
     public static final boolean identityPreservingDensityFunctionMapAll = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.identityPreservingDensityFunctionMapAll")
-            .comment("Reuse density function nodes whose inputs did not change when a chunk maps the noise router instead of rebuilding every node per chunk, and skip the throwaway holder pair NoiseChunk unwraps immediately.")
+            .comment("Cache unchanged density function nodes during chunk mapping instead of rebuilding them, and eliminate redundant calculations")
+            .getBoolean(true, false);
+
+    public static final boolean reuseSurfaceRules = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.reuseSurfaceRules")
+            .comment("Build the surface rule tree once per worker and some less GC churns.")
             .getBoolean(true, false);
 
 }

@@ -6,7 +6,7 @@ public class Config {
 
     public static final boolean overrideModernFixWorldGenAllocations = new ConfigSystem.ConfigAccessor()
             .key("generalOptimizations.overrideModernFixWorldGenAllocations")
-            .comment("Apply our world generation allocation patches ahead of ModernFix's equivalent ones. Disable to let ModernFix win instead.")
+            .comment("Apply world generation allocation patches ahead of ModernFix.")
             .getBoolean(true, true);
 
     public static void init() {

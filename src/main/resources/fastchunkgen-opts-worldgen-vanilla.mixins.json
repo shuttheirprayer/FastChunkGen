@@ -37,6 +37,8 @@
     "surface.MixinProtoChunk",
     "surface.MixinSurfaceColumn",
     "surface.MixinSurfaceSystem",
+    "surface_rules.ISurfaceRulesContext",
+    "surface_rules.MixinSurfaceSystem",
     "the_end_biome_cache.MixinTheEndBiomeSource"
   ]
 }
