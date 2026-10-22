@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.util.Arrays;
+
 @Mixin(DensityFunctions.Spline.class)
 public abstract class MixinSpline {
 
@@ -29,16 +31,27 @@ public abstract class MixinSpline {
      */
     @Overwrite
     public double compute(DensityFunction.FunctionContext context) {
-        if (context instanceof DensityFunction.SinglePointContext
-                || !(Thread.currentThread() instanceof C2MEForkJoinWorkerThreadFactory.C2MEForkJoinWorkerThread worker)) {
+        if (!(Thread.currentThread() instanceof C2MEForkJoinWorkerThreadFactory.C2MEForkJoinWorkerThread worker)) {
             return this.spline.apply(new DensityFunctions.Spline.Point(context));
         }
-        if (worker.splinePoint instanceof DensityFunctions.Spline.Point last && last.context() == context) {
-            return this.spline.apply(last);
+        int depth = worker.splineDepth;
+        Object[] pool = worker.splinePoints;
+        if (depth >= pool.length) {
+            pool = worker.splinePoints = Arrays.copyOf(pool, pool.length * 2);
         }
-        DensityFunctions.Spline.Point point = new DensityFunctions.Spline.Point(context);
-        worker.splinePoint = point;
-        return this.spline.apply(point);
+        DensityFunctions.Spline.Point point = (DensityFunctions.Spline.Point) pool[depth];
+        if (point == null) {
+            point = new DensityFunctions.Spline.Point(context);
+            pool[depth] = point;
+        } else if (point.context() != context) {
+            ((ISplinePoint) (Object) point).fcg$setContext(context);
+        }
+        worker.splineDepth = depth + 1;
+        try {
+            return this.spline.apply(point);
+        } finally {
+            worker.splineDepth = depth;
+        }
     }
 
 }

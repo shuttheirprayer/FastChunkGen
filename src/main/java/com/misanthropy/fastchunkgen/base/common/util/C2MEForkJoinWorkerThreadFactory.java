@@ -55,7 +55,8 @@ public class C2MEForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWor
 
     public static class C2MEForkJoinWorkerThread extends ForkJoinWorkerThread {
 
-        public Object splinePoint;
+        public Object[] splinePoints = new Object[8];
+        public int splineDepth;
         public final double[][] scratch = new double[16][];
         public int scratchDepth;
 

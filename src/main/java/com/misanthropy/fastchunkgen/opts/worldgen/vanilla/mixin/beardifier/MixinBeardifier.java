@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Beardifier.class)
 public abstract class MixinBeardifier implements CellBounds.BeardBounds {
@@ -74,14 +74,15 @@ public abstract class MixinBeardifier implements CellBounds.BeardBounds {
                 || maxZ < this.fcg$minZ || minZ > this.fcg$maxZ;
     }
 
-    @Inject(method = "compute", at = @At("HEAD"), cancellable = true)
-    private void fcg$outsideBounds(DensityFunction.FunctionContext context, CallbackInfoReturnable<Double> cir) {
+    @Redirect(method = "compute", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/ObjectListIterator;hasNext()Z", remap = false))
+    private boolean fcg$outsideBounds(ObjectListIterator<?> iterator, DensityFunction.FunctionContext context) {
         final int x = context.blockX();
         final int y = context.blockY();
         final int z = context.blockZ();
         if (x < this.fcg$minX || x > this.fcg$maxX || y < this.fcg$minY || y > this.fcg$maxY || z < this.fcg$minZ || z > this.fcg$maxZ) {
-            cir.setReturnValue(0.0D);
+            return false;
         }
+        return iterator.hasNext();
     }
 
 }

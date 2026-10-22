@@ -23,6 +23,7 @@
     "density_function_identity.MixinShiftA",
     "density_function_identity.MixinShiftB",
     "density_function_identity.MixinShiftedNoise",
+    "density_function_identity.ISplinePoint",
     "density_function_identity.MixinSpline",
     "density_function_identity.MixinSplineCoordinate",
     "density_function_identity.MixinWeirdScaledSampler",
