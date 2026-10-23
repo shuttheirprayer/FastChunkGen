@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.base;
 
+import com.misanthropy.fastchunkgen.base.common.compat.ModCompat;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,6 +39,7 @@ public class ModuleEntryPoint {
     }
 
     static {
+        ModCompat.disableModernFixProtoChunkRelease();
         int value;
         try {
             value = computeDefaultParallelism();

@@ -74,7 +74,9 @@ public class FastChunkGen {
                 LOGGER.info("ModernFix worldgen_allocation detected, deferred our world generation allocation patches to it");
             }
         }
-        if (ModCompat.isModernFixFeatureEnabled("mixin.perf.release_protochunks")
+        if (ModCompat.isModernFixProtoChunkReleaseDisabled()) {
+            LOGGER.info("Disabled ModernFix mixin.perf.release_protochunks due to compatibility issues.");
+        } else if (ModCompat.isModernFixFeatureEnabled("mixin.perf.release_protochunks")
                 && com.misanthropy.fastchunkgen.threading.worldgen.ModuleEntryPoint.enabled) {
             LOGGER.warn("ModernFix mixin.perf.release_protochunks is enabled together with threaded world generation.");
             LOGGER.warn("It reads ChunkMap.updatingChunkMap from scheduleChunkGeneration, so async scheduling was disabled..");
