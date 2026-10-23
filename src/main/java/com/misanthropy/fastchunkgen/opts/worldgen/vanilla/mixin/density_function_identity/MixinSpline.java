@@ -2,6 +2,7 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_functio
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.misanthropy.fastchunkgen.base.common.util.C2MEForkJoinWorkerThreadFactory;
+import com.misanthropy.fastchunkgen.base.common.util.DensityScratch;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.util.CubicSpline;
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -32,7 +33,25 @@ public abstract class MixinSpline {
     @Overwrite
     public double compute(DensityFunction.FunctionContext context) {
         if (!(Thread.currentThread() instanceof C2MEForkJoinWorkerThreadFactory.C2MEForkJoinWorkerThread worker)) {
-            return this.spline.apply(new DensityFunctions.Spline.Point(context));
+            DensityScratch fallback = DensityScratch.fallback();
+            int depth = fallback.splineDepth;
+            Object[] pool = fallback.splinePoints;
+            if (depth >= pool.length) {
+                pool = fallback.splinePoints = Arrays.copyOf(pool, pool.length * 2);
+            }
+            DensityFunctions.Spline.Point point = (DensityFunctions.Spline.Point) pool[depth];
+            if (point == null) {
+                point = new DensityFunctions.Spline.Point(context);
+                pool[depth] = point;
+            } else if (point.context() != context) {
+                ((ISplinePoint) (Object) point).fcg$setContext(context);
+            }
+            fallback.splineDepth = depth + 1;
+            try {
+                return this.spline.apply(point);
+            } finally {
+                fallback.splineDepth = depth;
+            }
         }
         int depth = worker.splineDepth;
         Object[] pool = worker.splinePoints;

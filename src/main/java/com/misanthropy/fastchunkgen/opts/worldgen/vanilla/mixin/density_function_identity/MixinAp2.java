@@ -2,6 +2,7 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_functio
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.misanthropy.fastchunkgen.base.common.util.C2MEForkJoinWorkerThreadFactory;
+import com.misanthropy.fastchunkgen.base.common.util.DensityScratch;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.DensityFunctions;
@@ -55,10 +56,26 @@ public abstract class MixinAp2 {
         DensityFunction argument2 = this.argument2;
         if (type == DensityFunctions.TwoArgumentSimpleFunction.Type.ADD) {
             if (!(Thread.currentThread() instanceof C2MEForkJoinWorkerThreadFactory.C2MEForkJoinWorkerThread worker)) {
-                double[] scratch = new double[out.length];
-                argument2.fillArray(scratch, provider);
-                for (int i = 0; i < out.length; i++) {
-                    out[i] += scratch[i];
+                DensityScratch fallback = DensityScratch.fallback();
+                int depth = fallback.depth;
+                double[][] cache = fallback.scratch;
+                double[] scratch = depth < cache.length ? cache[depth] : null;
+                if (scratch == null || scratch.length != out.length) {
+                    scratch = new double[out.length];
+                    if (depth < cache.length) {
+                        cache[depth] = scratch;
+                    }
+                } else {
+                    Arrays.fill(scratch, 0.0);
+                }
+                fallback.depth = depth + 1;
+                try {
+                    argument2.fillArray(scratch, provider);
+                    for (int i = 0; i < out.length; i++) {
+                        out[i] += scratch[i];
+                    }
+                } finally {
+                    fallback.depth = depth;
                 }
                 return;
             }
