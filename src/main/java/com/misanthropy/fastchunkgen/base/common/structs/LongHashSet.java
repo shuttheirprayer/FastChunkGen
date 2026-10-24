@@ -5,13 +5,13 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import org.jetbrains.annotations.NotNull;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 
 public class LongHashSet implements LongSet {
 
-    private final HashSet<Long> delegate = new HashSet<>();
+    private final LongOpenHashSet delegate = new LongOpenHashSet();
 
     @Override
     public int size() {
@@ -25,23 +25,7 @@ public class LongHashSet implements LongSet {
 
     @Override
     public @NotNull LongIterator iterator() {
-        final Iterator<Long> iterator = delegate.iterator();
-        return new LongIterator() {
-            @Override
-            public long nextLong() {
-                return iterator.next();
-            }
-
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public void remove() {
-                iterator.remove();
-            }
-        };
+        return delegate.iterator();
     }
 
     @NotNull
@@ -93,12 +77,7 @@ public class LongHashSet implements LongSet {
 
     @Override
     public long[] toLongArray() {
-        final long[] result = new long[delegate.size()];
-        int i = 0;
-        for (long value : delegate) {
-            result[i++] = value;
-        }
-        return result;
+        return delegate.toLongArray();
     }
 
     @Override
