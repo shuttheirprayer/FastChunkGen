@@ -1,6 +1,7 @@
 package com.misanthropy.fastchunkgen.base.mixin.access;
 
 import net.minecraft.world.level.ChunkPos;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,5 +19,8 @@ public interface IRegionBasedStorage {
 
     @Accessor
     Path getFolder();
+
+    @Accessor("regionCache")
+    Long2ObjectLinkedOpenHashMap<RegionFile> getRegionCache();
 
 }

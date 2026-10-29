@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.StreamTagVisitor;
 import net.minecraft.world.level.ChunkPos;
+import com.misanthropy.fastchunkgen.base.mixin.access.IRegionBasedStorage;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 import org.jetbrains.annotations.Nullable;
@@ -93,12 +94,12 @@ public class C2MEStorageThread extends Thread {
             if (!hasWork) {
                 if (this.closing.get()) {
                     try {
-                        flush0(true);
+                        flush0(false);
                     } catch (Throwable t) {
                         LOGGER.error("Error flushing storage on close", t);
                     }
                     try {
-                        this.storage.close();
+                        closeRegionFiles();
                     } catch (Throwable t) {
                         LOGGER.error("Error closing storage", t);
                     }
@@ -110,7 +111,7 @@ public class C2MEStorageThread extends Thread {
                     if (!pollTasksSafely()) {
                         Thread.interrupted(); // clear interrupt flag
                         for (int i = 0; i < SPIN_ITERATIONS; i ++) {
-                            if (pollTasksSafely()) continue main_loop;
+                            if (pollTasksSafely() || this.closing.get()) continue main_loop;
                             LockSupport.parkNanos("Spin-waiting for tasks", SPIN_PARK_NANOS);
                         }
                     }
@@ -222,11 +223,50 @@ public class C2MEStorageThread extends Thread {
         flushBacklog();
         if (sync) {
             try {
-                this.storage.flush();
+                forceRegionFiles();
             } catch (Throwable t) {
                 throw new RuntimeException("Error flushing storage", t);
             }
         }
+    }
+
+    private void forceRegionFiles() throws IOException {
+        eachRegionFile(RegionFile::flush);
+    }
+
+    private void closeRegionFiles() throws IOException {
+        eachRegionFile(RegionFile::close);
+    }
+
+    private void eachRegionFile(RegionFileAction action) throws IOException {
+        java.util.List<RegionFile> files = new java.util.ArrayList<>(((IRegionBasedStorage) (Object) this.storage).getRegionCache().values());
+        if (files.isEmpty()) return;
+        java.util.concurrent.ConcurrentLinkedQueue<IOException> failures = new java.util.concurrent.ConcurrentLinkedQueue<>();
+        if (files.size() == 1) {
+            try {
+                action.run(files.get(0));
+            } catch (Throwable e) {
+                failures.add(e instanceof IOException io ? io : new IOException(e));
+            }
+        } else {
+            files.parallelStream().forEach(file -> {
+                try {
+                    action.run(file);
+                } catch (Throwable e) {
+                    failures.add(e instanceof IOException io ? io : new IOException(e));
+                }
+            });
+        }
+        IOException first = failures.poll();
+        if (first != null) {
+            IOException next;
+            while ((next = failures.poll()) != null) first.addSuppressed(next);
+            throw first;
+        }
+    }
+
+    private interface RegionFileAction {
+        void run(RegionFile file) throws IOException;
     }
 
     public CompletableFuture<Void> close() {
