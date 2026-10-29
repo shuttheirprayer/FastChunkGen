@@ -39,6 +39,7 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
 
     @Override
     public boolean runOneChunkAutoSave() {
+        ChunkHolder holderToSave = null;
         synchronized (this.dirtyChunkPosForAutoSave) {
             final ObjectBidirectionalIterator<Object2LongMap.Entry<ChunkPos>> iterator = this.dirtyChunkPosForAutoSave.object2LongEntrySet().fastIterator();
             while (iterator.hasNext()) {
@@ -50,8 +51,8 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
                 if (chunkHolder == null) continue;
                 final CompletableFuture<ChunkAccess> savingFuture = chunkHolder.getChunkToSave();
                 if (savingFuture.isDone()) {
-                    this.saveChunkIfNeeded(chunkHolder);
-                    return true;
+                    holderToSave = chunkHolder;
+                    break;
                 } else {
                     savingFuture.handle((chunk, throwable) -> {
                         this.enqueueDirtyChunkPosForAutoSave(chunkHolder.getPos());
@@ -61,6 +62,8 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
             }
         }
 
-        return false;
+        if (holderToSave == null) return false;
+        this.saveChunkIfNeeded(holderToSave);
+        return true;
     }
 }
