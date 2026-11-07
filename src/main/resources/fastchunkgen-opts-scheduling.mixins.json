@@ -12,6 +12,7 @@
     "idle_tasks.autosave.enhanced_autosave.MixinMinecraftServer",
     "idle_tasks.autosave.enhanced_autosave.MixinThreadedAnvilChunkStorage",
     "idle_tasks.autosave.enhanced_autosave.MixinWorldChunk",
+    "player_ticket_slots.MixinDistanceManager",
     "mid_tick_chunk_tasks.MixinMinecraftServer",
     "mid_tick_chunk_tasks.MixinServerChunkManager",
     "mid_tick_chunk_tasks.MixinServerWorld",

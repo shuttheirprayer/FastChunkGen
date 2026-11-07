@@ -20,6 +20,16 @@ public class Config {
             .comment("Milliseconds before a dirty chunk is auto-saved. ENHANCED only.")
             .getLong(20000,20000);
 
+    public static final long playerTicketSlotsSetting = new ConfigSystem.ConfigAccessor()
+            .key("generalOptimizations.playerTicketSlots")
+            .comment("Chunks a player may have loading at once while exploring. Vanilla allows 4, each freed only when its chunk is fully ready. -1 matches the worker thread count (never below 4!!).")
+            .getLong(-1, -1);
+
+    public static int playerTicketSlots() {
+        long slots = playerTicketSlotsSetting > 0 ? playerTicketSlotsSetting : com.misanthropy.fastchunkgen.base.ModuleEntryPoint.globalExecutorParallelism;
+        return (int) Math.max(4, Math.min(64, slots));
+    }
+
     public static void init() {
     }
 
