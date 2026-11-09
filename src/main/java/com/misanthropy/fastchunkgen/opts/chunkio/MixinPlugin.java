@@ -15,6 +15,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.chunkio.mixin.skip_missing_external_chunk_delete."))
             return Config.skipMissingExternalChunkDelete;
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.chunkio.mixin.direct_block_states."))
+            return Config.directBlockStateEncoding;
+
         return true;
     }
 }

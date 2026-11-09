@@ -28,6 +28,11 @@ public class Config {
             .comment("Check that the oversized chunk file exists before deleting it after each chunk save. Avoids an internal exception per save on Windows.")
             .getBoolean(true, false);
 
+    public static final boolean directBlockStateEncoding = new ConfigSystem.ConfigAccessor()
+            .key("ioSystem.directBlockStateEncoding")
+            .comment("Write chunk section block palettes straight to NBT instead of through codecs. Same output.")
+            .getBoolean(true, false);
+
     public static void init() {
     }
 

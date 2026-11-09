@@ -120,8 +120,9 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    shade("com.ibm.async:asyncutil:${async_util_version}") {
+    implementation(jarJar("com.ibm.async:asyncutil:${async_util_version}")) {
         transitive = false
+        jarJar.ranged(it, "[${async_util_version},)")
     }
     minecraftLibrary("com.ibm.async:asyncutil:${async_util_version}") {
         transitive = false

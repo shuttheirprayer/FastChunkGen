@@ -77,6 +77,10 @@ public final class SharedNoise {
         return this.levelsShareable == YES;
     }
 
+    public static boolean isYFree(DensityFunction function) {
+        return kind(function, POINT, null, new IdentityHashMap<>(), 0) >= FREE;
+    }
+
     public long takeColumn(long key, List<NoiseChunk.NoiseInterpolator> interpolators, boolean slice0, int i) {
         final Column column;
         synchronized (this.columns) {

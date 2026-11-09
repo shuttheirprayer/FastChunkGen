@@ -38,6 +38,15 @@ public class MixinPlugin extends ModuleMixinPlugin {
             return Config.reuseSurfaceRules
                     && !ModCompat.isModernFixFeatureEnabled("mixin.perf.worldgen_allocation");
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.post_processing."))
+            return Config.skipNoOpPostProcessing;
+
+        if (mixinClassName.equals("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.climate.MixinParameterList"))
+            return Config.flatClimateSearch;
+
+        if (mixinClassName.equals("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.climate.MixinNoiseChunk"))
+            return Config.columnClimateCache;
+
         return true;
     }
 }

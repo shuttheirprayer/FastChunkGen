@@ -35,6 +35,21 @@ public class Config {
             .comment("Cache unchanged density function nodes during chunk mapping instead of rebuilding them, and eliminate redundant calculations")
             .getBoolean(true, false);
 
+    public static final boolean skipNoOpPostProcessing = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.skipNoOpPostProcessing")
+            .comment("Skip post-processing fluid ticks and shape updates that provably change nothing.")
+            .getBoolean(true, false);
+
+    public static final boolean flatClimateSearch = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.flatClimateSearch")
+            .comment("Faster biome parameter lookup with the same results.")
+            .getBoolean(true, false);
+
+    public static final boolean columnClimateCache = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.columnClimateCache")
+            .comment("Sample height-independent climate noise once per biome column.")
+            .getBoolean(true, false);
+
     public static final boolean reuseSurfaceRules = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.reuseSurfaceRules")
             .comment("Build the surface rule tree once per worker and some less GC churns.")
