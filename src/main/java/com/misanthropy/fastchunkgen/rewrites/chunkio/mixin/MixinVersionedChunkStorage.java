@@ -2,16 +2,16 @@ package com.misanthropy.fastchunkgen.rewrites.chunkio.mixin;
 
 import com.misanthropy.fastchunkgen.rewrites.chunkio.common.C2MEStorageVanillaInterface;
 import com.misanthropy.fastchunkgen.rewrites.chunkio.common.ChunkWriteCompletion;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.storage.ChunkStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.storage.ChunkStorage;
-import net.minecraft.world.level.chunk.storage.IOWorker;
 
 @Mixin(ChunkStorage.class)
 public class MixinVersionedChunkStorage {

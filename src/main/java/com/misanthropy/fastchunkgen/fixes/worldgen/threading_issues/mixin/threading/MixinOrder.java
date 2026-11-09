@@ -1,6 +1,8 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threading;
 
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.IWeightedList;
+import net.minecraft.world.entity.ai.behavior.GateBehavior;
+import net.minecraft.world.entity.ai.behavior.ShufflingList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -10,8 +12,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
-import net.minecraft.world.entity.ai.behavior.GateBehavior;
-import net.minecraft.world.entity.ai.behavior.ShufflingList;
 
 @Mixin(GateBehavior.OrderPolicy.class)
 public class MixinOrder {

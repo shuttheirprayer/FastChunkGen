@@ -3,17 +3,17 @@ package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
 import com.misanthropy.fastchunkgen.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.Config;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.util.thread.BlockableEventLoop;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(value = ChunkHolder.class, priority = 1110)
 public abstract class MixinChunkHolder {

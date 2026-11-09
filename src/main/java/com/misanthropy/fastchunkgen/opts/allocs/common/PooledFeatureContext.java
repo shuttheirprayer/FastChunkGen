@@ -1,7 +1,6 @@
 package com.misanthropy.fastchunkgen.opts.allocs.common;
 
 import com.misanthropy.fastchunkgen.base.common.structs.SimpleObjectPool;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
@@ -9,6 +8,8 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+
+import java.util.Optional;
 
 public class PooledFeatureContext<FC extends FeatureConfiguration> extends FeaturePlaceContext<FC> {
 

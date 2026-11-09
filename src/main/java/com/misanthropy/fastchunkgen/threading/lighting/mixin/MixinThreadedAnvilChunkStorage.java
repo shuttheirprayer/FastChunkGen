@@ -1,6 +1,9 @@
 package com.misanthropy.fastchunkgen.threading.lighting.mixin;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.thread.ProcessorMailbox;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -9,14 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.thread.ProcessorMailbox;
+import java.util.concurrent.*;
 
 @Mixin(ChunkMap.class)
 public class MixinThreadedAnvilChunkStorage {

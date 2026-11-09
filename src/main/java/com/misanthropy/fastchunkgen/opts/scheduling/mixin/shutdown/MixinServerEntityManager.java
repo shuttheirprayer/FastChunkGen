@@ -3,14 +3,14 @@ package com.misanthropy.fastchunkgen.opts.scheduling.mixin.shutdown;
 import com.misanthropy.fastchunkgen.opts.scheduling.common.ITryFlushable;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.world.level.entity.EntityPersistentStorage;
+import net.minecraft.world.level.entity.PersistentEntitySectionManager;
+import net.minecraft.world.level.entity.Visibility;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.function.Consumer;
-import net.minecraft.world.level.entity.EntityPersistentStorage;
-import net.minecraft.world.level.entity.PersistentEntitySectionManager;
-import net.minecraft.world.level.entity.Visibility;
 
 @Mixin(PersistentEntitySectionManager.class)
 public abstract class MixinServerEntityManager<T> implements ITryFlushable {

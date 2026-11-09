@@ -2,14 +2,14 @@ package com.misanthropy.fastchunkgen.threading.chunkio.mixin;
 
 import com.misanthropy.fastchunkgen.base.mixin.access.IBlender;
 import com.misanthropy.fastchunkgen.threading.chunkio.common.ProtoChunkExtension;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ProtoChunk;
 
 @Mixin(ProtoChunk.class)
 public class MixinProtoChunk implements ProtoChunkExtension {

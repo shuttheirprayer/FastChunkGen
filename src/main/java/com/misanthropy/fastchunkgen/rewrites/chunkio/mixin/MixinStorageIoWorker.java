@@ -1,6 +1,11 @@
 package com.misanthropy.fastchunkgen.rewrites.chunkio.mixin;
 
 import com.misanthropy.fastchunkgen.rewrites.chunkio.common.C2MEStorageVanillaInterface;
+import net.minecraft.util.thread.ProcessorMailbox;
+import net.minecraft.util.thread.StrictQueue;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.storage.IOWorker;
+import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -11,11 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.minecraft.util.thread.ProcessorMailbox;
-import net.minecraft.util.thread.StrictQueue;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.storage.IOWorker;
-import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 
 @Mixin(IOWorker.class)
 public class MixinStorageIoWorker {

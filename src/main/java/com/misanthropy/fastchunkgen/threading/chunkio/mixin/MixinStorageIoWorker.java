@@ -2,6 +2,14 @@ package com.misanthropy.fastchunkgen.threading.chunkio.mixin;
 
 import com.misanthropy.fastchunkgen.threading.chunkio.common.ChunkIoThreadingExecutorUtils;
 import com.misanthropy.fastchunkgen.threading.chunkio.common.IAsyncChunkStorage;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.StreamTagVisitor;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.visitors.CollectFields;
+import net.minecraft.nbt.visitors.FieldSelector;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,14 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.LockSupport;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.StreamTagVisitor;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.visitors.CollectFields;
-import net.minecraft.nbt.visitors.FieldSelector;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.storage.IOWorker;
 
 @Mixin(IOWorker.class)
 public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {

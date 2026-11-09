@@ -1,6 +1,7 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common;
 
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.debug.SMAPSourceDebugExtension;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,6 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
-import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 
 public class CheckedThreadLocalRandom extends SingleThreadedRandomSource {
 

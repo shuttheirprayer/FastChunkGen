@@ -1,12 +1,12 @@
 package com.misanthropy.fastchunkgen.fixes.general.threading_issues.mixin;
 
+import net.minecraft.server.level.DistanceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Set;
 import java.util.function.Consumer;
-import net.minecraft.server.level.DistanceManager;
 
 @Mixin(DistanceManager.class)
 public class MixinChunkTicketManager {

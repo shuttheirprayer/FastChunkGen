@@ -1,6 +1,9 @@
 package com.misanthropy.fastchunkgen.fixes.general.threading_issues.mixin.asynccatchers;
 
 import com.misanthropy.fastchunkgen.base.common.util.Log;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.util.thread.BlockableEventLoop;
-import net.minecraft.world.entity.Entity;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinThreadedAnvilChunkStorage {

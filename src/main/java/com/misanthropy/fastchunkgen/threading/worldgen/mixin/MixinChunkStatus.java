@@ -1,21 +1,25 @@
 package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
 
-import com.misanthropy.fastchunkgen.base.common.util.Log;
+import com.misanthropy.fastchunkgen.base.common.scheduler.IVanillaChunkManager;
 import com.misanthropy.fastchunkgen.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
+import com.misanthropy.fastchunkgen.base.common.util.Log;
 import com.misanthropy.fastchunkgen.base.common.util.SneakyThrow;
 import com.misanthropy.fastchunkgen.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.misanthropy.fastchunkgen.opts.chunk_access.common.CurrentWorldGenState;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.Config;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.IChunkStatus;
-import com.misanthropy.fastchunkgen.base.common.scheduler.IVanillaChunkManager;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import net.minecraft.server.level.*;
+import net.minecraft.util.profiling.jfr.JvmProfiler;
+import net.minecraft.util.profiling.jfr.callback.ProfiledDuration;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -27,18 +31,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ThreadedLevelLightEngine;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.util.profiling.jfr.JvmProfiler;
-import net.minecraft.util.profiling.jfr.callback.ProfiledDuration;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 @Mixin(ChunkStatus.class)
 public abstract class MixinChunkStatus implements IChunkStatus {

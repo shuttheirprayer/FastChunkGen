@@ -1,13 +1,14 @@
 package com.misanthropy.fastchunkgen.opts.allocs.mixin;
 
 import com.ibm.asyncutil.util.Combinators;
+import com.misanthropy.fastchunkgen.base.common.util.CFUtil;
+import net.minecraft.Util;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import net.minecraft.Util;
 
 @Mixin(Util.class)
 public abstract class MixinUtil {
@@ -18,7 +19,7 @@ public abstract class MixinUtil {
      */
     @Overwrite
     public static <V> CompletableFuture<List<V>> sequence(List<CompletableFuture<V>> futures) {
-        return Combinators.collect(futures, Collectors.toList()).toCompletableFuture();
+        return Combinators.collect(futures, Collectors.toList()).toCompletableFuture().thenCompose(CFUtil::unwrapNestedFutures);
     }
 
     /**

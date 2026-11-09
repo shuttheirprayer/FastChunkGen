@@ -1,7 +1,7 @@
 package com.misanthropy.fastchunkgen.threading.lighting;
 
-import com.misanthropy.fastchunkgen.base.common.util.ModUtil;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
+import com.misanthropy.fastchunkgen.base.common.util.ModUtil;
 
 public class ModuleEntryPoint {
 

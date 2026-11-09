@@ -1,6 +1,8 @@
 package com.misanthropy.fastchunkgen.opts.scheduling.mixin.task_scheduling;
 
 import com.misanthropy.fastchunkgen.base.mixin.access.IServerChunkManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.storage.EntityStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -9,8 +11,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import java.util.concurrent.Executor;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.chunk.storage.EntityStorage;
 
 @Mixin(EntityStorage.class)
 public class MixinEntityChunkDataAccess {

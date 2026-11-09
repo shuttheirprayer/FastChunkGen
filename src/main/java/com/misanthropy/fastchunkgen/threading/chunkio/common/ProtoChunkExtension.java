@@ -1,9 +1,10 @@
 package com.misanthropy.fastchunkgen.threading.chunkio.common;
 
+import net.minecraft.world.level.ChunkPos;
+
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.world.level.ChunkPos;
 
 public interface ProtoChunkExtension {
 

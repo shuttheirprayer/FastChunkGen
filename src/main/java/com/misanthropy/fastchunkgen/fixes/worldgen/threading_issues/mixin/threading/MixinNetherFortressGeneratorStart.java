@@ -1,6 +1,7 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threading;
 
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.XPieceDataExtension;
+import net.minecraft.world.level.levelgen.structure.structures.NetherFortressPieces;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.world.level.levelgen.structure.structures.NetherFortressPieces;
 
 @Mixin(NetherFortressPieces.StartPiece.class)
 public class MixinNetherFortressGeneratorStart {

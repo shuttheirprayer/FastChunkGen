@@ -6,18 +6,17 @@ import com.misanthropy.fastchunkgen.base.common.GlobalExecutors;
 import com.misanthropy.fastchunkgen.base.common.scheduler.NeighborLockingTask;
 import com.misanthropy.fastchunkgen.base.common.scheduler.SchedulingManager;
 import com.mojang.datafixers.util.Either;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.AS_IS;
-import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.PARALLELIZED;
-import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.SINGLE_THREADED;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static com.misanthropy.fastchunkgen.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.*;
 
 public class ChunkStatusUtils {
 

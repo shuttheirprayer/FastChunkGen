@@ -4,6 +4,13 @@ import com.misanthropy.fastchunkgen.base.common.util.CFUtil;
 import com.misanthropy.fastchunkgen.base.common.util.Log;
 import com.misanthropy.fastchunkgen.opts.chunk_access.common.CurrentWorldGenState;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.Util;
+import net.minecraft.server.level.*;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,19 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import net.minecraft.Util;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.DistanceManager;
-import net.minecraft.server.level.ServerChunkCache;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.TicketType;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.ImposterProtoChunk;
 
 @Mixin(ServerChunkCache.class)
 public abstract class MixinServerChunkManager {

@@ -3,14 +3,15 @@ package com.misanthropy.fastchunkgen.threading.chunkio.common;
 import com.ibm.asyncutil.util.Combinators;
 import com.misanthropy.fastchunkgen.base.mixin.access.IBlender;
 import com.misanthropy.fastchunkgen.base.mixin.access.IStorageIoWorker;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.storage.IOWorker;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.storage.IOWorker;
 
 public class BlendingInfoUtil {
 

@@ -1,7 +1,7 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues;
 
-import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.Config;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
+import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.Config;
 
 public class ModuleEntryPoint {
 

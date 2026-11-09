@@ -1,18 +1,14 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.vanilla_bugs.mixin.incorrect_required_status_for_generation_in_structure_references_status;
 
 import com.google.common.collect.ImmutableList;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(ChunkStatus.class)
 public class MixinChunkStatus {

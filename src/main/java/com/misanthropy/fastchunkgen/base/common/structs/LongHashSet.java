@@ -2,10 +2,9 @@ package com.misanthropy.fastchunkgen.base.common.structs;
 
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import org.jetbrains.annotations.NotNull;
-
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.util.Collection;
 

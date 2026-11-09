@@ -2,6 +2,12 @@ package com.misanthropy.fastchunkgen.threading.worldgen.mixin.cancellation;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkLevel;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -12,12 +18,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkLevel;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.util.thread.BlockableEventLoop;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinThreadedAnvilChunkStorage {

@@ -3,6 +3,17 @@ package com.misanthropy.fastchunkgen.threading.chunkio.mixin;
 import com.misanthropy.fastchunkgen.threading.chunkio.common.AsyncSerializationManager;
 import com.misanthropy.fastchunkgen.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import com.misanthropy.fastchunkgen.threading.chunkio.common.Config;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.lighting.LayerLightEventListener;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
 import org.slf4j.Logger;
@@ -13,18 +24,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Set;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.ai.village.poi.PoiManager;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.storage.ChunkSerializer;
-import net.minecraft.world.level.lighting.LayerLightEventListener;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {

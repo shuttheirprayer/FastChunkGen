@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threading;
 
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -10,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 @Mixin(StructureTemplate.class)
 public class MixinStructure {

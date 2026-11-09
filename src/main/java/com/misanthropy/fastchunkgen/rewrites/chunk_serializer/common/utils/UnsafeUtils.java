@@ -1,10 +1,10 @@
 package com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class UnsafeUtils {
 

@@ -2,15 +2,6 @@ package com.misanthropy.fastchunkgen.opts.chunk_access.mixin.region_capture;
 
 import com.misanthropy.fastchunkgen.opts.chunk_access.common.CurrentWorldGenState;
 import com.mojang.datafixers.util.Either;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
@@ -22,6 +13,15 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 @Mixin(value = ChunkStatus.class, priority = 990)
 public abstract class MixinChunkStatus {

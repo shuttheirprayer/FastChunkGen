@@ -2,6 +2,7 @@ package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threa
 
 import com.misanthropy.fastchunkgen.base.mixin.access.IWeightedListEntry;
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.IWeightedList;
+import net.minecraft.world.entity.ai.behavior.ShufflingList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -10,7 +11,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
-import net.minecraft.world.entity.ai.behavior.ShufflingList;
 
 @Mixin(ShufflingList.class)
 public class MixinWeightedList<U> implements IWeightedList<U> {

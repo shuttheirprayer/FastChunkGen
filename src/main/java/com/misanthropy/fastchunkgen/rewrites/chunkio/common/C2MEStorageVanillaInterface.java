@@ -2,15 +2,15 @@ package com.misanthropy.fastchunkgen.rewrites.chunkio.common;
 
 import com.google.common.base.Preconditions;
 import com.misanthropy.fastchunkgen.base.common.theinterface.IDirectStorage;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StreamTagVisitor;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.StreamTagVisitor;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.storage.IOWorker;
 
 public class C2MEStorageVanillaInterface extends IOWorker implements IDirectStorage {
 

@@ -1,6 +1,18 @@
 package com.misanthropy.fastchunkgen.threading.chunkio.common;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.lighting.LayerLightEventListener;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,18 +22,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.DataLayer;
-import net.minecraft.world.level.lighting.LayerLightEventListener;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 
 public class AsyncSerializationManager {
 

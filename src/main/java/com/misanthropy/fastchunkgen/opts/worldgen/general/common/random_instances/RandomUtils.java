@@ -1,10 +1,6 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.general.common.random_instances;
 
-import com.misanthropy.fastchunkgen.base.mixin.access.IAtomicSimpleRandomDeriver;
-import com.misanthropy.fastchunkgen.base.mixin.access.ISimpleRandom;
-import com.misanthropy.fastchunkgen.base.mixin.access.IXoroshiro128PlusPlusRandom;
-import com.misanthropy.fastchunkgen.base.mixin.access.IXoroshiro128PlusPlusRandomDeriver;
-import com.misanthropy.fastchunkgen.base.mixin.access.IXoroshiro128PlusPlusRandomImpl;
+import com.misanthropy.fastchunkgen.base.mixin.access.*;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;

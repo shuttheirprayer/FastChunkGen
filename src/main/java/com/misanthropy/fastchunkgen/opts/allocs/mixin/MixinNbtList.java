@@ -1,6 +1,10 @@
 package com.misanthropy.fastchunkgen.opts.allocs.mixin;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.nbt.CollectionTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagTypes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -11,10 +15,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.nbt.CollectionTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.TagTypes;
 
 @Mixin(ListTag.class)
 public abstract class MixinNbtList extends CollectionTag<Tag> {

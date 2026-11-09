@@ -5,13 +5,6 @@ import com.misanthropy.fastchunkgen.base.mixin.access.IVersionedChunkStorage;
 import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
-import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.nio.file.Path;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +14,13 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
+import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
+import java.nio.file.Path;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinThreadedAnvilChunkStorage extends ChunkStorage {

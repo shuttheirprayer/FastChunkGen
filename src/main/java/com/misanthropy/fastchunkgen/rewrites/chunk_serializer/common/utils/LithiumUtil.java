@@ -2,10 +2,11 @@ package com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils;
 
 import com.misanthropy.fastchunkgen.base.mixin.access.IChunkTickScheduler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceAVLTreeMap;
-import java.lang.reflect.Field;
-import java.util.Collection;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import net.minecraft.world.ticks.ScheduledTick;
+
+import java.lang.reflect.Field;
+import java.util.Collection;
 
 public class LithiumUtil {
     static final Field chunkTickScheduler$TickQueuesByTimeAndPriority;

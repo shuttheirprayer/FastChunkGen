@@ -1,6 +1,7 @@
 package com.misanthropy.fastchunkgen.fixes.general.threading_issues.mixin.asynccatchers;
 
 import com.misanthropy.fastchunkgen.base.common.util.Log;
+import net.minecraft.server.level.ServerChunkCache;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -9,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ConcurrentModificationException;
-import net.minecraft.server.level.ServerChunkCache;
 
 @Mixin(ServerChunkCache.class)
 public class MixinServerChunkManager {

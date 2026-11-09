@@ -1,12 +1,12 @@
 package com.misanthropy.fastchunkgen.fixes.general.threading_issues.mixin;
 
 import com.mojang.datafixers.util.Either;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkLevel;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -14,11 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkLevel;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder {

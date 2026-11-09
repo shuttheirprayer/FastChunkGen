@@ -2,6 +2,7 @@ package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threa
 
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.IStrongholdGenerator;
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.XPieceDataExtension;
+import net.minecraft.world.level.levelgen.structure.structures.StrongholdPieces;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -10,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.world.level.levelgen.structure.structures.StrongholdPieces;
 
 @Mixin(StrongholdPieces.class)
 public class MixinStrongholdGenerator implements IStrongholdGenerator {

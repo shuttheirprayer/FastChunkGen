@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.threading;
 
+import net.minecraft.world.level.levelgen.structure.structures.DesertPyramidPiece;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import net.minecraft.world.level.levelgen.structure.structures.DesertPyramidPiece;
 
 @Mixin(DesertPyramidPiece.class)
 public abstract class MixinDesertTempleGenerator {

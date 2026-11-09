@@ -3,13 +3,13 @@ package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues;
 import com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin;
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.debug.SMAPPool;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
 import org.spongepowered.asm.mixin.transformer.ext.Extensions;
 import org.spongepowered.asm.mixin.transformer.ext.IExtension;
 import org.spongepowered.asm.mixin.transformer.ext.ITargetClassContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MixinPlugin extends ModuleMixinPlugin {
 

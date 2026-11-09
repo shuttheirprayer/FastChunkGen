@@ -1,12 +1,8 @@
 package com.misanthropy.fastchunkgen.threading.chunkio.mixin;
 
-import com.misanthropy.fastchunkgen.threading.chunkio.common.ProtoChunkExtension;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-
-import java.util.concurrent.CompletableFuture;
+import com.misanthropy.fastchunkgen.threading.chunkio.common.ProtoChunkExtension;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
@@ -14,6 +10,10 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ProtoChunk;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(WorldGenRegion.class)
 public abstract class MixinChunkRegion implements WorldGenLevel {

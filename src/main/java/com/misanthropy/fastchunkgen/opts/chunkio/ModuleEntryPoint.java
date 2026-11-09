@@ -1,7 +1,7 @@
 package com.misanthropy.fastchunkgen.opts.chunkio;
 
-import com.misanthropy.fastchunkgen.opts.chunkio.common.Config;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
+import com.misanthropy.fastchunkgen.opts.chunkio.common.Config;
 
 public class ModuleEntryPoint {
 

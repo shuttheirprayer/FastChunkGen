@@ -1,17 +1,18 @@
 package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.misanthropy.fastchunkgen.base.common.GlobalExecutors;
 import com.misanthropy.fastchunkgen.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.Config;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -20,11 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.util.thread.BlockableEventLoop;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinThreadedAnvilChunkStorage {

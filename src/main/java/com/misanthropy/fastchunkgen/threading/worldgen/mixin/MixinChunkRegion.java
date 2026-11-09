@@ -3,6 +3,11 @@ package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.Config;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.IChunkStatus;
 import com.misanthropy.fastchunkgen.threading.worldgen.common.debug.StacktraceRecorder;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,11 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(WorldGenRegion.class)
 public class MixinChunkRegion {

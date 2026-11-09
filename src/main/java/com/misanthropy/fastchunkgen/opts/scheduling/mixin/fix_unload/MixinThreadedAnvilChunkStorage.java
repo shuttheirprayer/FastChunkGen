@@ -3,6 +3,8 @@ package com.misanthropy.fastchunkgen.opts.scheduling.mixin.fix_unload;
 import com.misanthropy.fastchunkgen.base.common.structs.LongHashSet;
 import com.misanthropy.fastchunkgen.base.common.util.ShouldKeepTickingUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.util.thread.BlockableEventLoop;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -13,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BooleanSupplier;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.util.thread.BlockableEventLoop;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinThreadedAnvilChunkStorage {

@@ -5,20 +5,11 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.util.CubicSpline;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
-import net.minecraft.world.level.levelgen.NoiseChunk;
-import net.minecraft.world.level.levelgen.NoiseRouter;
-import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.levelgen.synth.BlendedNoise;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 
 public final class SharedNoise {
 

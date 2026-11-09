@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.opts.scheduling.mixin.general_overheads;
 
+import net.minecraft.server.level.ChunkMap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -7,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Queue;
-import net.minecraft.server.level.ChunkMap;
 
 @Mixin(ChunkMap.class)
 public class MixinThreadedAnvilChunkStorage {

@@ -1,9 +1,9 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_function_identity;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.misanthropy.fastchunkgen.base.common.util.C2MEForkJoinWorkerThreadFactory;
 import com.misanthropy.fastchunkgen.base.common.util.DensityScratch;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.DensityFunctions;
 import org.spongepowered.asm.mixin.Final;

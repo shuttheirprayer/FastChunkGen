@@ -1,12 +1,12 @@
 package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
 
 import com.misanthropy.fastchunkgen.base.common.util.InvokingExecutorService;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.concurrent.ExecutorService;
-import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public class MixinNoiseChunkGenerator {

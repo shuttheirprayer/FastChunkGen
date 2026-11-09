@@ -1,11 +1,11 @@
 package com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils;
 
 import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.mixin.IStarlightSaveState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
-import net.minecraft.world.level.chunk.ChunkAccess;
 
 public class StarLightUtil {
     static final MethodHandle getBlockNibbles;

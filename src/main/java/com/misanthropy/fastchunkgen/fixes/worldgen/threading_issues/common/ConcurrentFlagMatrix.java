@@ -1,7 +1,8 @@
 package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.minecraft.world.level.levelgen.structure.structures.WoodlandMansionPieces;
+
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ConcurrentFlagMatrix extends WoodlandMansionPieces.SimpleGrid {
 

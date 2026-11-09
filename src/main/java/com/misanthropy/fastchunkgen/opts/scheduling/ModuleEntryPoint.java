@@ -1,7 +1,7 @@
 package com.misanthropy.fastchunkgen.opts.scheduling;
 
-import com.misanthropy.fastchunkgen.opts.scheduling.common.Config;
 import com.misanthropy.fastchunkgen.base.common.config.ConfigSystem;
+import com.misanthropy.fastchunkgen.opts.scheduling.common.Config;
 
 public class ModuleEntryPoint {
 

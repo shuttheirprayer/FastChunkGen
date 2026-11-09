@@ -51,7 +51,8 @@ import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class to parse Source Debug Extensions and enhance stack traces.

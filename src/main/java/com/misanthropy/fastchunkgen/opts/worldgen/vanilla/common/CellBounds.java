@@ -6,8 +6,8 @@ import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.INoiseInter
 import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.Beardifier;
+import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseChunk;
 import org.spongepowered.asm.mixin.transformer.meta.MixinMerged;
 

@@ -5,16 +5,16 @@ import com.misanthropy.fastchunkgen.rewrites.chunk_serializer.common.utils.Unsaf
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.Unsafe;
 
 import java.io.UTFDataFormatException;
 import java.util.Arrays;
 import java.util.List;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
 
 @SuppressWarnings("WeakerAccess")
 public class NbtWriter {
