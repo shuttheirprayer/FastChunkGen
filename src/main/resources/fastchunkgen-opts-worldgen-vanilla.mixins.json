@@ -36,6 +36,8 @@
     "fill.INoiseInterpolator",
     "fill.MixinNoiseBasedChunkGenerator",
     "fill.MixinNoiseChunk",
+    "interpolator_slices.MixinNoiseChunk",
+    "interpolator_slices.MixinNoiseInterpolator",
     "noise_chunk_wrap.MixinNoiseChunk",
     "shared_noise.MixinNoiseChunk",
     "surface.IBiomeManager",

@@ -55,4 +55,9 @@ public class Config {
             .comment("Build the surface rule tree once per worker and some less GC churns.")
             .getBoolean(true, false);
 
+    public static final boolean releaseInterpolationSlices = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.releaseInterpolationSlices")
+            .comment("Hold the terrain noise interpolation arrays only while a chunk's terrain is being filled instead of for as long as the unfinished chunk exists.")
+            .getBoolean(true, false);
+
 }

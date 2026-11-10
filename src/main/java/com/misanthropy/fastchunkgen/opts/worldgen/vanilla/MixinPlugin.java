@@ -47,6 +47,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.equals("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.climate.MixinNoiseChunk"))
             return Config.columnClimateCache;
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.interpolator_slices."))
+            return Config.releaseInterpolationSlices;
+
         return true;
     }
 }

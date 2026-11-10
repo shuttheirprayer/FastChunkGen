@@ -19,6 +19,7 @@ public final class DirectBlockStates {
     }
 
     public static CompoundTag encode(PalettedContainer<BlockState> container) {
+        if (container.getClass() != PalettedContainer.class) return null;
         final int size = PalettedContainer.Strategy.SECTION_STATES.size();
         final int[] ids = IDS.get();
         final List<BlockState> values = new ArrayList<>();
