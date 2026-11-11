@@ -3,6 +3,8 @@ package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.mixin.compa
 import org.spongepowered.asm.mixin.*;
 
 import java.util.LinkedHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @Pseudo
@@ -12,6 +14,9 @@ public abstract class MixinLostCitiesBoundedCache {
     @Shadow
     @Final
     private LinkedHashMap<Object, Object> values;
+
+    @Unique
+    private final ConcurrentHashMap<Object, CompletableFuture<Object>> fastchunkgen$inFlight = new ConcurrentHashMap<>();
 
     @Shadow
     abstract Object get(Object key);
@@ -24,12 +29,28 @@ public abstract class MixinLostCitiesBoundedCache {
     Object computeIfAbsent(Object key, Function<Object, Object> factory) {
         final Object cached = this.get(key);
         if (cached != null) return cached;
-        final Object computed = factory.apply(key);
-        synchronized (this) {
-            final Object raced = this.values.putIfAbsent(key, computed);
-            if (raced != null) return raced;
-            this.trim();
+        final CompletableFuture<Object> claim = new CompletableFuture<>();
+        final CompletableFuture<Object> running = this.fastchunkgen$inFlight.putIfAbsent(key, claim);
+        if (running != null) return running.join();
+        try {
+            Object value;
+            synchronized (this) {
+                value = this.values.get(key);
+            }
+            if (value == null) {
+                value = factory.apply(key);
+                synchronized (this) {
+                    this.values.put(key, value);
+                    this.trim();
+                }
+            }
+            claim.complete(value);
+            return value;
+        } catch (Throwable t) {
+            claim.completeExceptionally(t);
+            throw t;
+        } finally {
+            this.fastchunkgen$inFlight.remove(key, claim);
         }
-        return computed;
     }
 }
