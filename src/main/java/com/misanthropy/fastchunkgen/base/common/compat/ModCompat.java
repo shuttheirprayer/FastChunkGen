@@ -82,6 +82,15 @@ public class ModCompat {
         }
     }
 
+    public static final String CHUNKY_MAX_WORKING_COUNT = "chunky.maxWorkingCount";
+
+    // Chunky keeps only 50 chunks in flight by default, which starves our workers. Read once in GenerationTask's static init.
+    public static boolean raiseChunkyWorkingCount() {
+        if (System.getProperty(CHUNKY_MAX_WORKING_COUNT) != null) return false;
+        System.setProperty(CHUNKY_MAX_WORKING_COUNT, "1000");
+        return true;
+    }
+
     public static boolean isModernFixProtoChunkReleaseDisabled() {
         return modernFixProtoChunkReleaseDisabled;
     }

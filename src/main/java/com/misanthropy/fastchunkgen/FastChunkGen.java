@@ -74,6 +74,10 @@ public class FastChunkGen {
                 LOGGER.info("ModernFix worldgen_allocation detected, deferred our world generation allocation patches to it");
             }
         }
+        if (com.misanthropy.fastchunkgen.threading.worldgen.ModuleEntryPoint.enabled && com.misanthropy.fastchunkgen.base.common.util.ModUtil.isModLoaded("chunky")
+                && ModCompat.raiseChunkyWorkingCount()) {
+            LOGGER.info("Chunky detected, raised chunky.maxWorkingCount to 1000 so it keeps all worker threads busy");
+        }
         if (ModCompat.isModernFixProtoChunkReleaseDisabled()) {
             LOGGER.info("Disabled ModernFix mixin.perf.release_protochunks due to compatibility issues.");
         } else if (ModCompat.isModernFixFeatureEnabled("mixin.perf.release_protochunks")
