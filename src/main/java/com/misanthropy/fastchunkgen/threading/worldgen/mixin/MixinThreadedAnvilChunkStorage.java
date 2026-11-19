@@ -81,9 +81,5 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 });
     }
 
-    @Redirect(method = "getChunkRangeFuture", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getUpdatingChunkIfPresent(J)Lnet/minecraft/server/level/ChunkHolder;"))
-    private ChunkHolder redirectGetChunkHolder(ChunkMap instance, long pos) {
-        return this.visibleChunkMap.get(pos); // thread-safe
-    }
 
 }

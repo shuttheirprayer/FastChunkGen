@@ -60,4 +60,15 @@ public class Config {
             .comment("Hold the terrain noise interpolation arrays only while a chunk's terrain is being filled instead of for as long as the unfinished chunk exists.")
             .getBoolean(true, false);
 
+    public static boolean releaseNoiseChunkAfterCarving = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.releaseNoiseChunkAfterCarving")
+            .comment("Drop a chunk's terrain noise state once its caves are carved instead of keeping it until the chunk is finished. Nothing reads it after that step, and it is rebuilt if anything asks again.")
+            .getBoolean(true, false);
+
+
+    public static boolean releaseCarvingMasksAfterFeatures = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.releaseCarvingMasksAfterFeatures")
+            .comment("Drop a chunk's cave carving masks once its features are placed instead of keeping them until the chunk is finished. Features are the last step that reads them, and an unfinished chunk keeps two of them, 24 KB, for as long as it waits at the edge of the loaded area.")
+            .getBoolean(true, false);
+
 }

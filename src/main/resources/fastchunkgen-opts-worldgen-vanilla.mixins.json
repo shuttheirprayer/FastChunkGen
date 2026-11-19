@@ -5,6 +5,10 @@
   "plugin": "com.misanthropy.fastchunkgen.opts.worldgen.vanilla.MixinPlugin",
   "refmap": "fastchunkgen.refmap.json",
   "mixins": [
+    "release_noise_chunk.ChunkAccessNoiseAccessor",
+    "release_noise_chunk.MixinReleaseNoiseChunk",
+    "release_carving_masks.ProtoChunkCarvingAccessor",
+    "release_carving_masks.MixinReleaseCarvingMasks",
     "aquifer.MixinAquiferSamplerImpl",
     "aquifer.MixinNoiseChunkGenerator",
     "beardifier.MixinBeardifier",

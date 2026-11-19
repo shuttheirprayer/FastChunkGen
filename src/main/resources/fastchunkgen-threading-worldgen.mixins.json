@@ -5,7 +5,9 @@
   "plugin": "com.misanthropy.fastchunkgen.threading.worldgen.MixinPlugin",
   "refmap": "fastchunkgen.refmap.json",
   "mixins": [
+    "ChunkHolderSaveDependency",
     "MixinChunkGenerator",
+    "MixinChunkRangeFuture",
     "MixinChunkHolder",
     "MixinChunkRegion",
     "MixinChunkStatus",

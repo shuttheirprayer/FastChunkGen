@@ -67,6 +67,19 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_SECTIONS = NbtWriter.getAsciiStringBytes("sections");
     private static final byte[] STRING_BLOCK_STATES = NbtWriter.getAsciiStringBytes("block_states");
     private static final byte[] STRING_BIOMES = NbtWriter.getAsciiStringBytes("biomes");
+    private static final byte[][] FILLED_LIGHT = new byte[16][];
+
+    static {
+        for (int v = 0; v < 16; v++) {
+            FILLED_LIGHT[v] = new byte[2048];
+            java.util.Arrays.fill(FILLED_LIGHT[v], (byte) (v | v << 4));
+        }
+    }
+
+    private static byte[] lightBytes(net.minecraft.world.level.chunk.DataLayer layer) {
+        return layer.isDefinitelyHomogenous() ? FILLED_LIGHT[layer.get(0, 0, 0)] : layer.getData();
+    }
+
     private static final byte[] STRING_BLOCK_LIGHT = NbtWriter.getAsciiStringBytes("BlockLight");
     private static final byte[] STRING_SKY_LIGHT = NbtWriter.getAsciiStringBytes("SkyLight");
     private static final byte[] STRING_OLD_NOISE = NbtWriter.getAsciiStringBytes("old_noise");
@@ -315,7 +328,7 @@ public final class ChunkDataSerializer {
                         writer.compoundEntryStart();
                         hasInner = true;
                     }
-                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.getData());
+                    writer.putByteArray(STRING_BLOCK_LIGHT, lightBytes(blockLight));
                 }
 
                 if (skyLight != null && !skyLight.isEmpty()) {
@@ -323,7 +336,7 @@ public final class ChunkDataSerializer {
                         writer.compoundEntryStart();
                         hasInner = true;
                     }
-                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.getData());
+                    writer.putByteArray(STRING_SKY_LIGHT, lightBytes(skyLight));
                 }
 
                 if (hasInner) {

@@ -1,0 +1,13 @@
+package com.misanthropy.fastchunkgen.threading.worldgen.mixin;
+
+import net.minecraft.server.level.ChunkHolder;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
+
+import java.util.concurrent.CompletableFuture;
+
+@Mixin(ChunkHolder.class)
+public interface ChunkHolderSaveDependency {
+    @Invoker("addSaveDependency")
+    void fcg$addSaveDependency(String label, CompletableFuture<?> future);
+}
