@@ -2,6 +2,8 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.CellBounds;
+import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.ShortcutVerify;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -13,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -21,6 +24,7 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
 
     @Unique private static final int COPPER_MIN_Y = 0, COPPER_MAX_Y = 50, IRON_MIN_Y = -60, IRON_MAX_Y = -8;
     @Unique private static final double VEIN_THRESHOLD = 0.399999D;
+    @Unique private static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
     @Shadow @Final private List<NoiseChunk.NoiseInterpolator> interpolators;
     @Shadow @Final private Aquifer aquifer;
@@ -39,8 +43,6 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
     @Shadow private long interpolationCounter;
     @Shadow private long arrayInterpolationCounter;
 
-    @Shadow protected abstract BlockState getInterpolatedState();
-
     @Unique private NoiseChunk.BlockStateFiller fcg$aquiferFiller;
     @Unique private NoiseChunk.BlockStateFiller fcg$veinFiller;
     @Unique private DensityFunction fcg$veinToggle;
@@ -51,8 +53,12 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
     @Unique private INoiseInterpolator fcg$veinCorners;
     @Unique private CellBounds.Node fcg$bounds;
     @Unique private boolean fcg$sortingCells;
+    @Unique private boolean fcg$filling;
+    @Unique private boolean fcg$cellsFilled;
+    @Unique private int fcg$probedCell;
     @Unique private boolean fcg$solidAllowed;
     @Unique private int fcg$cellMode;
+    @Unique private int fcg$verifyMode;
 
     @ModifyArg(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableList$Builder;add(Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;", ordinal = 0, remap = false))
     private Object fcg$captureAquiferFiller(Object filler) {
@@ -80,6 +86,14 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
 
     @Override
     public void fcg$beginCellSorting(boolean solidAllowed) {
+        this.fcg$checkCellSkipping();
+        this.fcg$filling = true;
+        this.fcg$sortingCells = this.fcg$canSkipCells;
+        this.fcg$solidAllowed = solidAllowed;
+    }
+
+    @Unique
+    private void fcg$checkCellSkipping() {
         if (!this.fcg$cellSkipChecked) {
             this.fcg$cellSkipChecked = true;
             if (this.fcg$finalDensity instanceof ICacheAllInCell && this.aquifer instanceof CellBounds.HighAir
@@ -96,13 +110,21 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
                         this.cellWidth, this.cellHeight, this.blender == Blender.empty());
             }
         }
-        this.fcg$sortingCells = this.fcg$canSkipCells;
-        this.fcg$solidAllowed = solidAllowed;
     }
 
     @Override
     public int fcg$cellMode() {
         return this.fcg$cellMode;
+    }
+
+    @Override
+    public boolean fcg$filling() {
+        return this.fcg$filling;
+    }
+
+    @Override
+    public boolean fcg$cellsFilled() {
+        return this.fcg$cellsFilled;
     }
 
     @Override
@@ -117,29 +139,50 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
 
     @Override
     public BlockState fcg$interpolatedState() {
-        return this.getInterpolatedState();
+        return this.blockStateRule.calculate((NoiseChunk) (Object) this);
+    }
+
+    @Inject(method = "getInterpolatedState", at = @At("HEAD"), cancellable = true)
+    private void fcg$probeBoundedCell(CallbackInfoReturnable<BlockState> cir) {
+        if (this.fcg$probedCell == CellBounds.NORMAL) return;
+        final BlockState state = this.fcg$probedCell == CellBounds.AIR ? AIR : null;
+        if (ShortcutVerify.ENABLED) {
+            final BlockState actual = this.blockStateRule.calculate((NoiseChunk) (Object) this);
+            ShortcutVerify.PROBED_CELLS.record(state == actual, this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ + " " + state + " " + actual);
+        }
+        cir.setReturnValue(state);
     }
 
     @Inject(method = "stopInterpolation", at = @At("HEAD"))
     private void fcg$endCellSorting(CallbackInfo ci) {
         this.fcg$sortingCells = false;
+        this.fcg$filling = false;
         this.fcg$cellMode = CellBounds.NORMAL;
     }
 
     @Inject(method = "selectCellYZ", at = @At("HEAD"), cancellable = true)
     private void fcg$skipBoundedCell(int cellY, int cellZ, CallbackInfo ci) {
         this.fcg$cellMode = CellBounds.NORMAL;
+        this.fcg$cellsFilled = this.fcg$filling;
+        this.fcg$probedCell = CellBounds.NORMAL;
+        if (!this.fcg$filling) {
+            final List<NoiseChunk.NoiseInterpolator> list = this.interpolators;
+            for (int i = 0, n = list.size(); i < n; i++) ((INoiseInterpolator) list.get(i)).fcg$selectCellYZ(cellY, cellZ);
+            this.cellStartBlockY = (cellY + this.cellNoiseMinY) * this.cellHeight;
+            this.cellStartBlockZ = (this.firstCellZ + cellZ) * this.cellWidth;
+            this.arrayInterpolationCounter += 2;
+            this.fcg$probedCell = this.fcg$boundedCell(cellY, cellZ, this.cellStartBlockY, this.cellStartBlockZ, true);
+            ci.cancel();
+            return;
+        }
         if (!this.fcg$sortingCells || this.fcg$bounds == null) return;
         final int minY = (cellY + this.cellNoiseMinY) * this.cellHeight;
         final int minZ = (this.firstCellZ + cellZ) * this.cellWidth;
-        final CellBounds.Node bounds = this.fcg$bounds;
-        bounds.eval(cellY, cellZ, this.cellStartBlockX, minY, minZ);
-        if (bounds.hi < -CellBounds.MARGIN) {
-            if (!((CellBounds.HighAir) this.aquifer).fcg$allHighAir(this.cellStartBlockX, minY, minZ, this.cellWidth, this.cellHeight)) return;
-            this.fcg$cellMode = CellBounds.AIR;
-        } else if (bounds.lo > CellBounds.MARGIN && this.fcg$solidAllowed && this.fcg$veinsAbsent(cellY, cellZ, minY)) {
-            this.fcg$cellMode = CellBounds.SOLID;
-        } else {
+        this.fcg$cellMode = this.fcg$boundedCell(cellY, cellZ, minY, minZ, this.fcg$solidAllowed);
+        if (this.fcg$cellMode == CellBounds.NORMAL) return;
+        if (ShortcutVerify.ENABLED) {
+            this.fcg$verifyMode = this.fcg$cellMode;
+            this.fcg$cellMode = CellBounds.NORMAL;
             return;
         }
         this.cellStartBlockY = minY;
@@ -162,6 +205,12 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
         if (!this.fcg$sortingCells) return;
         final double[] densities = ((ICacheAllInCell) this.fcg$finalDensity).fcg$values();
         final boolean firstPositive = densities[0] > 0.0D;
+        if (ShortcutVerify.ENABLED && this.fcg$verifyMode != CellBounds.NORMAL) {
+            boolean ok = true;
+            for (double density : densities) ok &= density > 0.0D == (this.fcg$verifyMode == CellBounds.SOLID);
+            this.fcg$verifyMode = CellBounds.NORMAL;
+            ShortcutVerify.SKIPPED_CELLS.record(ok, this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ);
+        }
         for (double density : densities) {
             if (density > 0.0D != firstPositive) return;
         }
@@ -173,6 +222,18 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
             this.fcg$cellMode = CellBounds.SOLID;
         }
         if (this.fcg$cellMode != CellBounds.NORMAL) this.fcg$skipCellSteps();
+    }
+
+    @Unique
+    private int fcg$boundedCell(int cellY, int cellZ, int minY, int minZ, boolean solidAllowed) {
+        this.fcg$checkCellSkipping();
+        final CellBounds.Node bounds = this.fcg$bounds;
+        if (bounds == null) return CellBounds.NORMAL;
+        bounds.eval(cellY, cellZ, this.cellStartBlockX, minY, minZ);
+        if (bounds.hi < -CellBounds.MARGIN) {
+            return ((CellBounds.HighAir) this.aquifer).fcg$allHighAir(this.cellStartBlockX, minY, minZ, this.cellWidth, this.cellHeight) ? CellBounds.AIR : CellBounds.NORMAL;
+        }
+        return bounds.lo > CellBounds.MARGIN && solidAllowed && this.fcg$veinsAbsent(cellY, cellZ, minY) ? CellBounds.SOLID : CellBounds.NORMAL;
     }
 
     @Unique

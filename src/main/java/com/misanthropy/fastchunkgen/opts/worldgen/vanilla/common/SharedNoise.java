@@ -2,7 +2,7 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common;
 
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.INoiseInterpolator;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.util.CubicSpline;
 import net.minecraft.world.level.levelgen.*;
@@ -14,28 +14,32 @@ import java.util.*;
 public final class SharedNoise {
 
     public static final int NO_LEVEL = Integer.MIN_VALUE;
-    private static final int MAX_COLUMNS = 1 << 13, MAX_LEVELS = 1 << 18;
+    private static final int MAX_COLUMNS = 1 << 12, MAX_LEVELS = 1 << 18;
 
     private static final Map<RandomState, SharedNoise> BY_STATE = Collections.synchronizedMap(new WeakHashMap<>());
 
     private static final String DENSITY_FUNCTIONS = "net.minecraft.world.level.levelgen.DensityFunctions$";
     private static final String NOISE_CHUNK = "net.minecraft.world.level.levelgen.NoiseChunk$";
+    private static final String LITHOFORM = "com.misanthropy.lithoform.bowl.";
     private static final int IMPURE = 0, PURE = 1, FREE = 2, CONST = 3;
     private static final int SLICE = 0, POINT = 1, OUTSIDE = 2;
     private static final byte UNKNOWN = 0, NO = 1, YES = 2;
 
     private final int minY, height, cellWidth, cellHeight;
     private volatile byte columnsShareable, levelsShareable;
-    private final Long2ObjectOpenHashMap<Column> columns = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectLinkedOpenHashMap<Column> columns = new Long2ObjectLinkedOpenHashMap<>();
+    private final ArrayDeque<double[]> spare = new ArrayDeque<>();
     private final Long2IntOpenHashMap levels = new Long2IntOpenHashMap();
 
     private static final class Column {
-        final double[][] values;
+        final double[] values;
+        final int parts;
         final long counterSteps;
         int remaining;
 
-        Column(double[][] values, long counterSteps, int remaining) {
+        Column(double[] values, int parts, long counterSteps, int remaining) {
             this.values = values;
+            this.parts = parts;
             this.counterSteps = counterSteps;
             this.remaining = remaining;
         }
@@ -72,35 +76,49 @@ public final class SharedNoise {
         return kind(function, POINT, null, new IdentityHashMap<>(), 0) >= FREE;
     }
 
-    public long takeColumn(long key, List<NoiseChunk.NoiseInterpolator> interpolators, boolean slice0, int i) {
-        final Column column;
+    public long takeColumn(long key, List<NoiseChunk.NoiseInterpolator> interpolators, boolean slice0, int i, boolean probe) {
         synchronized (this.columns) {
-            column = this.columns.get(key);
+            final Column column = this.columns.get(key);
             if (column == null) return -1L;
-            if (--column.remaining <= 0) this.columns.remove(key);
+            if (column.parts != interpolators.size()) return -1L;
+            final int length = column.values.length / column.parts;
+            for (int k = 0; k < column.parts; k++) {
+                if (slot(interpolators.get(k), slice0, i).length != length) return -1L;
+            }
+            for (int k = 0; k < column.parts; k++) {
+                System.arraycopy(column.values, k * length, slot(interpolators.get(k), slice0, i), 0, length);
+            }
+            if (!probe && --column.remaining <= 0) {
+                this.columns.remove(key);
+                this.spare.add(column.values);
+            }
+            return column.counterSteps;
         }
-        if (column.values.length != interpolators.size()) return -1L;
-        for (int k = 0; k < column.values.length; k++) {
-            if (slot(interpolators.get(k), slice0, i).length != column.values[k].length) return -1L;
-        }
-        for (int k = 0; k < column.values.length; k++) {
-            final double[] slot = slot(interpolators.get(k), slice0, i);
-            System.arraycopy(column.values[k], 0, slot, 0, slot.length);
-        }
-        return column.counterSteps;
     }
 
-    public void putColumn(long key, int sharers, List<NoiseChunk.NoiseInterpolator> interpolators, boolean slice0, int i, long counterSteps) {
-        final double[][] values = new double[interpolators.size()][];
-        for (int k = 0; k < values.length; k++) values[k] = slot(interpolators.get(k), slice0, i).clone();
+    public void putColumn(long key, int sharers, List<NoiseChunk.NoiseInterpolator> interpolators, boolean slice0, int i, long counterSteps, boolean probe) {
+        final int parts = interpolators.size();
+        if (parts == 0) return;
+        final int length = slot(interpolators.get(0), slice0, i).length;
         synchronized (this.columns) {
             final Column raced = this.columns.get(key);
             if (raced != null) {
-                if (--raced.remaining <= 0) this.columns.remove(key);
+                if (!probe && --raced.remaining <= 0) {
+                    this.columns.remove(key);
+                    this.spare.add(raced.values);
+                }
                 return;
             }
-            if (this.columns.size() >= MAX_COLUMNS) this.columns.clear();
-            this.columns.put(key, new Column(values, counterSteps, sharers - 1));
+            for (int k = 1; k < parts; k++) {
+                if (slot(interpolators.get(k), slice0, i).length != length) return;
+            }
+            if (this.columns.size() >= MAX_COLUMNS) this.spare.add(this.columns.removeFirst().values);
+            double[] values = this.spare.poll();
+            if (values == null || values.length != parts * length) values = new double[parts * length];
+            for (int k = 0; k < parts; k++) {
+                System.arraycopy(slot(interpolators.get(k), slice0, i), 0, values, k * length, length);
+            }
+            this.columns.put(key, new Column(values, parts, counterSteps, probe ? sharers : sharers - 1));
         }
     }
 
@@ -176,6 +194,10 @@ public final class SharedNoise {
             };
         }
         if (node instanceof BlendedNoise) return PURE;
+        if (node instanceof ColumnNoise column) return kind(column.inner(), mode, cacheOnces, memo, depth + 1);
+        if (node instanceof PointNoise point) return kind(point.inner(), mode, cacheOnces, memo, depth + 1);
+        if (node instanceof ColumnMarker marker) return kind(marker.inner, mode, cacheOnces, memo, depth + 1);
+        if (name.startsWith(LITHOFORM)) return lithoform(node, name.substring(LITHOFORM.length()), mode, cacheOnces, memo, depth);
         // a beardifier predates this chunk's wrappers and differs per chunk, while the verdict is cached per RandomState
         if (mode == OUTSIDE && (node instanceof DensityFunctions.BeardifierOrMarker || name.startsWith(NOISE_CHUNK))) return PURE;
         if (!name.startsWith(DENSITY_FUNCTIONS)) return IMPURE;
@@ -195,6 +217,16 @@ public final class SharedNoise {
                     Math.min(child(node, parts[3], mode, cacheOnces, memo, depth), child(node, parts[4], mode, cacheOnces, memo, depth)));
             case "HolderHolder" -> kind(((Holder<DensityFunction>) parts[0].get(node)).value(), mode, cacheOnces, memo, depth + 1);
             case "Spline" -> spline(((DensityFunctions.Spline) node).spline(), mode, cacheOnces, memo, depth + 1);
+            default -> IMPURE;
+        };
+    }
+
+    private static int lithoform(Object node, String type, int mode, Set<Object> cacheOnces, Map<Object, Integer> memo, int depth) throws ReflectiveOperationException {
+        final Field[] parts = CellBounds.COMPONENTS.get(node.getClass());
+        return switch (type) {
+            case "MouthGate" -> FREE;
+            case "BowlOffset", "BowlMask" -> Math.min(child(node, parts[0], mode, cacheOnces, memo, depth), FREE);
+            case "Special3D", "SpecialDry" -> Math.min(child(node, parts[0], mode, cacheOnces, memo, depth), PURE);
             default -> IMPURE;
         };
     }

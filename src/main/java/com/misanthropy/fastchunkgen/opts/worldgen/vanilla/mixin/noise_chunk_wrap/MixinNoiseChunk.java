@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.noise_chunk_wrap;
 
+import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.ColumnMarker;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseChunk;
@@ -29,7 +30,7 @@ public abstract class MixinNoiseChunk implements DensityFunction.Visitor {
      */
     @Overwrite
     protected DensityFunction wrap(DensityFunction function) {
-        if (function instanceof DensityFunctions.MarkerOrMarked) {
+        if (function instanceof DensityFunctions.MarkerOrMarked || function instanceof ColumnMarker) {
             Function<DensityFunction, DensityFunction> wrapNew = this.fastchunkgen$wrapNew;
             if (wrapNew == null) {
                 wrapNew = f -> this.wrapNew(f);

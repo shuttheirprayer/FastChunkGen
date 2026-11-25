@@ -50,6 +50,11 @@ public class Config {
             .comment("Sample height-independent climate noise once per biome column.")
             .getBoolean(true, false);
 
+    public static final boolean columnDensityCache = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.columnDensityCache")
+            .comment("Sample the height-independent parts of the terrain noise once per block column instead of once per block.")
+            .getBoolean(true, false);
+
     public static final boolean reuseSurfaceRules = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.reuseSurfaceRules")
             .comment("Build the surface rule tree once per worker and some less GC churns.")

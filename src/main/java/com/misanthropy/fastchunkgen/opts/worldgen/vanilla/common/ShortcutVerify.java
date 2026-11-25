@@ -17,6 +17,9 @@ public final class ShortcutVerify {
     public static final ShortcutVerify FLUID = new ShortcutVerify("still fluid");
     public static final ShortcutVerify CLIMATE = new ShortcutVerify("flat climate");
     public static final ShortcutVerify COLUMN = new ShortcutVerify("column climate");
+    public static final ShortcutVerify COLUMN_NOISE = new ShortcutVerify("column noise");
+    public static final ShortcutVerify SKIPPED_CELLS = new ShortcutVerify("skipped cells");
+    public static final ShortcutVerify PROBED_CELLS = new ShortcutVerify("probed cells");
     public static final ShortcutVerify SHAPES = new ShortcutVerify("static shapes");
     public static final ShortcutVerify BLOCK_STATES = new ShortcutVerify("direct block states");
 

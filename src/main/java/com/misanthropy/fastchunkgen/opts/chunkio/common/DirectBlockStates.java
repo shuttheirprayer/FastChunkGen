@@ -3,6 +3,7 @@ package com.misanthropy.fastchunkgen.opts.chunkio.common;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.SimpleBitStorage;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,12 +11,46 @@ import net.minecraft.world.level.chunk.Palette;
 import net.minecraft.world.level.chunk.PalettedContainer;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DirectBlockStates {
 
     private static final ThreadLocal<int[]> IDS = ThreadLocal.withInitial(() -> new int[PalettedContainer.Strategy.SECTION_STATES.size()]);
 
+    private static final Map<BlockState, CompoundTag> STATE_TAGS = new ConcurrentHashMap<>();
+
     private DirectBlockStates() {
+    }
+
+    private static CompoundTag stateTag(BlockState state) {
+        final CompoundTag known = STATE_TAGS.get(state);
+        if (known != null) return known;
+        final CompoundTag made = frozen(NbtUtils.writeBlockState(state));
+        final CompoundTag raced = STATE_TAGS.putIfAbsent(state, made);
+        return raced == null ? made : raced;
+    }
+
+    private static CompoundTag frozen(CompoundTag tag) {
+        final Map<String, Tag> entries = new HashMap<>();
+        for (String key : tag.getAllKeys()) {
+            final Tag value = tag.get(key);
+            entries.put(key, value instanceof CompoundTag inner ? frozen(inner) : value);
+        }
+        return new CompoundTag(Collections.unmodifiableMap(entries));
+    }
+
+    public static boolean sameBlocks(CompoundTag a, CompoundTag b) {
+        if (a.equals(b)) return true;
+        final ListTag first = a.getList("palette", 10), second = b.getList("palette", 10);
+        for (int i = 0; i < PalettedContainer.Strategy.SECTION_STATES.size(); i++) {
+            if (!first.get(id(a, first.size(), i)).equals(second.get(id(b, second.size(), i)))) return false;
+        }
+        return true;
+    }
+
+    private static int id(CompoundTag tag, int entries, int index) {
+        final int bits = PalettedContainer.Strategy.SECTION_STATES.calculateBitsForSerialization(Block.BLOCK_STATE_REGISTRY, entries);
+        return bits == 0 ? 0 : new SimpleBitStorage(bits, PalettedContainer.Strategy.SECTION_STATES.size(), tag.getLongArray("data")).get(index);
     }
 
     public static CompoundTag encode(PalettedContainer<BlockState> container) {
@@ -59,7 +94,7 @@ public final class DirectBlockStates {
             container.release();
         }
         final ListTag entries = new ListTag();
-        for (BlockState value : values) entries.add(NbtUtils.writeBlockState(value));
+        for (BlockState value : values) entries.add(stateTag(value));
         final CompoundTag tag = new CompoundTag();
         tag.put("palette", entries);
         final int bits = PalettedContainer.Strategy.SECTION_STATES.calculateBitsForSerialization(Block.BLOCK_STATE_REGISTRY, values.size());

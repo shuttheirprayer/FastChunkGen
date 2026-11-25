@@ -385,16 +385,22 @@ public class MixinAquiferSamplerImpl implements CellBounds.HighAir {
     @Override
     public boolean fcg$allHighAir(int minX, int minY, int minZ, int sizeXZ, int sizeY) {
         for (int y = minY; y < minY + sizeY; y++) {
-            final int m = Math.floorDiv(y + 1, 12);
             for (int x = minX; x < minX + sizeXZ; x++) {
-                final int l = Math.floorDiv(x - 5, 16);
                 for (int z = minZ; z < minZ + sizeXZ; z++) {
-                    if (y - 5 < this.globalFluidPicker.computeFluid(x, y, z).fluidLevel
-                            || y - 5 < this.fcg$maxFluidLevel(l, m, Math.floorDiv(z - 5, 16))) {
-                        return false;
-                    }
+                    if (y - 5 < this.globalFluidPicker.computeFluid(x, y, z).fluidLevel) return false;
                 }
             }
+        }
+        final int maxL = Math.floorDiv(minX + sizeXZ - 6, 16);
+        final int maxN = Math.floorDiv(minZ + sizeXZ - 6, 16);
+        for (int y = minY; y < minY + sizeY; ) {
+            final int m = Math.floorDiv(y + 1, 12);
+            for (int l = Math.floorDiv(minX - 5, 16); l <= maxL; l++) {
+                for (int n = Math.floorDiv(minZ - 5, 16); n <= maxN; n++) {
+                    if (y - 5 < this.fcg$maxFluidLevel(l, m, n)) return false;
+                }
+            }
+            y = (m + 1) * 12 - 1;
         }
         return true;
     }

@@ -3,19 +3,27 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.ICacheAllInCell;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.ICacheOnce;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.INoiseInterpolator;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.minecraft.core.Holder;
+import net.minecraft.util.CubicSpline;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseChunk;
 import org.spongepowered.asm.mixin.transformer.meta.MixinMerged;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.RecordComponent;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class CellBounds {
@@ -38,6 +46,10 @@ public final class CellBounds {
         void fcg$beginCellSorting(boolean solidAllowed);
 
         int fcg$cellMode();
+
+        boolean fcg$cellsFilled();
+
+        boolean fcg$filling();
 
         int fcg$cellWidth();
 
@@ -72,28 +84,77 @@ public final class CellBounds {
         }
     };
 
-    private static volatile Boolean onlyVanillaBeardTerms;
+    private static final String FLAT_CACHE = "net.minecraft.world.level.levelgen.NoiseChunk$FlatCache";
+    private static final String SPECIAL_3D = "com.misanthropy.lithoform.bowl.Special3D";
+    private static final MethodHandle PLAIN = plain();
+
+    private static final Field[] UNKNOWN_BEARD_TERMS = new Field[0];
+    private static final Set<String> KNOWN_BEARD_MIXINS = Set.of(
+            "com.yungnickyoung.minecraft.yungsapi.mixin.BeardifierMixin",
+            "com.craisinlord.integrated_api.mixins.structures.BeardifierMixin",
+            "com.finndog.moogs_structures.mixins.terrainadaptation.BeardifierMixin",
+            "com.finderfeed.fdbosses.mixin.BeardifierMixin",
+            "io.redspace.ironsspellbooks.mixin.BeardifierMixin");
+    private static final Set<String> VANILLA_BEARD_TERMS = Set.of("pieceIterator", "junctionIterator", "f_158065_", "f_158066_");
+    private static volatile Field[] foreignBeardTerms;
+
+    private static MethodHandle plain() {
+        try {
+            return MethodHandles.publicLookup().findStatic(Class.forName(SPECIAL_3D), "plain", MethodType.methodType(boolean.class, int.class, int.class, int.class));
+        } catch (ReflectiveOperationException | LinkageError e) {
+            return null;
+        }
+    }
+
+    private static DensityFunction special(DensityFunction function) {
+        try {
+            return (DensityFunction) COMPONENTS.get(function.getClass())[0].get(function);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     private CellBounds() {
     }
 
-    public static boolean onlyVanillaBeardTerms() {
-        Boolean only = onlyVanillaBeardTerms;
-        if (only == null) {
-            only = true;
-            try {
-                final Set<String> interfaces = new HashSet<>();
-                for (Class<?> type : Beardifier.class.getInterfaces()) interfaces.add(type.getName());
-                for (Method method : Beardifier.class.getDeclaredMethods()) {
-                    final MixinMerged merged = method.getAnnotation(MixinMerged.class);
-                    if (merged != null && !merged.mixin().startsWith("com.misanthropy.fastchunkgen.") && !interfaces.contains(merged.mixin())) only = false;
-                }
-            } catch (Throwable t) {
-                only = false;
+    public static boolean onlyVanillaBeardTerms(Beardifier beardifier) {
+        Field[] terms = foreignBeardTerms;
+        if (terms == null) terms = foreignBeardTerms = findForeignBeardTerms();
+        if (terms == UNKNOWN_BEARD_TERMS) return false;
+        try {
+            for (Field term : terms) {
+                final ObjectListIterator<?> iterator = (ObjectListIterator<?>) term.get(beardifier);
+                if (iterator != null && (iterator.hasNext() || iterator.hasPrevious())) return false;
             }
-            onlyVanillaBeardTerms = only;
+            return true;
+        } catch (IllegalAccessException | RuntimeException e) {
+            return false;
         }
-        return only;
+    }
+
+    private static Field[] findForeignBeardTerms() {
+        try {
+            final Set<String> interfaces = new HashSet<>();
+            for (Class<?> type : Beardifier.class.getInterfaces()) interfaces.add(type.getName());
+            for (Method method : Beardifier.class.getDeclaredMethods()) {
+                final MixinMerged merged = method.getAnnotation(MixinMerged.class);
+                if (merged != null && !KNOWN_BEARD_MIXINS.contains(merged.mixin()) && !merged.mixin().startsWith("com.misanthropy.")
+                        && !interfaces.contains(merged.mixin())) {
+                    return UNKNOWN_BEARD_TERMS;
+                }
+            }
+            final List<Field> terms = new ArrayList<>();
+            for (Field field : Beardifier.class.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers()) || field.getName().startsWith("fcg$") || field.getName().startsWith("coo$")) continue;
+                if (field.getType() != ObjectListIterator.class) return UNKNOWN_BEARD_TERMS;
+                if (VANILLA_BEARD_TERMS.contains(field.getName())) continue;
+                field.setAccessible(true);
+                terms.add(field);
+            }
+            return terms.toArray(new Field[0]);
+        } catch (Throwable t) {
+            return UNKNOWN_BEARD_TERMS;
+        }
     }
 
     public static Node compile(DensityFunction root, int cellWidth, int cellHeight, boolean emptyBlender) {
@@ -111,7 +172,13 @@ public final class CellBounds {
         if (function instanceof ICacheAllInCell cache) return node(cache.fcg$noiseFiller(), width, height, emptyBlender, depth + 1);
         if (function instanceof ICacheOnce cache) return node(cache.fcg$function(), width, height, emptyBlender, depth + 1);
         if (function.getClass() == Beardifier.class) return new Beard((BeardBounds) function, width, height);
+        if (function instanceof ColumnNoise) return new Column(function, width);
+        if (function instanceof PointNoise point) return node(point.inner(), width, height, emptyBlender, depth + 1);
         final String name = function.getClass().getName();
+        if (name.equals(FLAT_CACHE)) return new Column(function, width);
+        if (name.equals(SPECIAL_3D)) {
+            return PLAIN == null ? Fixed.unknown() : new Special(node(special(function), width, height, emptyBlender, depth + 1), width);
+        }
         if (!name.startsWith(DENSITY_FUNCTIONS)) return Fixed.unknown();
         try {
             return record(function, name.substring(DENSITY_FUNCTIONS.length()), COMPONENTS.get(function.getClass()), width, height, emptyBlender, depth);
@@ -154,8 +221,146 @@ public final class CellBounds {
                         node((DensityFunction) parts[0].get(function), width, height, emptyBlender, depth + 1),
                         node((DensityFunction) parts[3].get(function), width, height, emptyBlender, depth + 1),
                         node((DensityFunction) parts[4].get(function), width, height, emptyBlender, depth + 1));
+            case "Noise":
+            case "ShiftedNoise":
+            case "Shift":
+                return new Fixed(function.minValue(), function.maxValue());
+            case "Spline":
+                return spline(((DensityFunctions.Spline) function).spline(), width, height, emptyBlender, depth + 1);
             default:
                 return Fixed.unknown();
+        }
+    }
+
+    private static Node spline(CubicSpline<?, ?> spline, int width, int height, boolean emptyBlender, int depth) {
+        if (spline instanceof CubicSpline.Constant<?, ?> constant) return new Fixed(constant.value(), constant.value());
+        if (depth > 32 || !(spline instanceof CubicSpline.Multipoint<?, ?> multipoint)
+                || !(multipoint.coordinate() instanceof DensityFunctions.Spline.Coordinate coordinate)) return Fixed.unknown();
+        final Node[] values = new Node[multipoint.values().size()];
+        for (int i = 0; i < values.length; i++) values[i] = spline(multipoint.values().get(i), width, height, emptyBlender, depth + 1);
+        return new SplineBounds(node(coordinate.function().value(), width, height, emptyBlender, depth + 1), multipoint.locations(), multipoint.derivatives(), values);
+    }
+
+    private static final class Column extends Node {
+        private final DensityFunction function;
+        private final int width;
+        private int atX = Integer.MIN_VALUE, atZ = Integer.MIN_VALUE;
+
+        Column(DensityFunction function, int width) {
+            this.function = function;
+            this.width = width;
+        }
+
+        @Override
+        public void eval(int cellY, int cellZ, int minX, int minY, int minZ) {
+            if (minX == this.atX && minZ == this.atZ) return;
+            this.atX = minX;
+            this.atZ = minZ;
+            double lo = Double.POSITIVE_INFINITY;
+            double hi = Double.NEGATIVE_INFINITY;
+            for (int x = minX; x < minX + this.width; x++) {
+                for (int z = minZ; z < minZ + this.width; z++) {
+                    final double value = this.function.compute(new DensityFunction.SinglePointContext(x, minY, z));
+                    lo = Math.min(lo, value);
+                    hi = Math.max(hi, value);
+                }
+            }
+            this.lo = lo;
+            this.hi = hi;
+        }
+    }
+
+    private static final class Special extends Node {
+        private final Node argument;
+        private final int width;
+        private int atX = Integer.MIN_VALUE, atZ = Integer.MIN_VALUE;
+        private boolean plain;
+
+        Special(Node argument, int width) {
+            this.argument = argument;
+            this.width = width;
+        }
+
+        @Override
+        public void eval(int cellY, int cellZ, int minX, int minY, int minZ) {
+            if (minX != this.atX || minZ != this.atZ) {
+                this.atX = minX;
+                this.atZ = minZ;
+                try {
+                    this.plain = (boolean) PLAIN.invokeExact(minX, minZ, this.width);
+                } catch (Throwable e) {
+                    this.plain = false;
+                }
+            }
+            if (this.plain) {
+                this.argument.eval(cellY, cellZ, minX, minY, minZ);
+                this.lo = this.argument.lo;
+                this.hi = this.argument.hi;
+            } else {
+                this.lo = Double.NEGATIVE_INFINITY;
+                this.hi = Double.POSITIVE_INFINITY;
+            }
+        }
+    }
+
+    private static final class SplineBounds extends Node {
+        private final Node coordinate;
+        private final float[] locations, derivatives;
+        private final Node[] values;
+
+        SplineBounds(Node coordinate, float[] locations, float[] derivatives, Node[] values) {
+            this.coordinate = coordinate;
+            this.locations = locations;
+            this.derivatives = derivatives;
+            this.values = values;
+        }
+
+        @Override
+        public void eval(int cellY, int cellZ, int minX, int minY, int minZ) {
+            this.coordinate.eval(cellY, cellZ, minX, minY, minZ);
+            final double from = this.coordinate.lo, to = this.coordinate.hi;
+            final int last = this.locations.length - 1;
+            this.lo = Double.POSITIVE_INFINITY;
+            this.hi = Double.NEGATIVE_INFINITY;
+            if (!(from <= to)) {
+                this.lo = Double.NEGATIVE_INFINITY;
+                this.hi = Double.POSITIVE_INFINITY;
+                return;
+            }
+            if (from < this.locations[0]) this.end(0, from, Math.min(to, this.locations[0]), cellY, cellZ, minX, minY, minZ);
+            if (to >= this.locations[last]) this.end(last, Math.max(from, this.locations[last]), to, cellY, cellZ, minX, minY, minZ);
+            for (int i = 0; i < last; i++) {
+                if (to < this.locations[i] || from > this.locations[i + 1]) continue;
+                final Node a = this.values[i], b = this.values[i + 1];
+                a.eval(cellY, cellZ, minX, minY, minZ);
+                b.eval(cellY, cellZ, minX, minY, minZ);
+                double lo = Math.min(a.lo, b.lo), hi = Math.max(a.hi, b.hi);
+                final float derivativeA = this.derivatives[i], derivativeB = this.derivatives[i + 1];
+                if (derivativeA != 0.0F || derivativeB != 0.0F) {
+                    final double span = this.locations[i + 1] - this.locations[i];
+                    final double slopeA = derivativeA * span, slopeB = derivativeB * span;
+                    lo += 0.25D * Math.min(Math.min(slopeA - b.hi + a.lo, -slopeB + b.lo - a.hi), 0.0D);
+                    hi += 0.25D * Math.max(Math.max(slopeA - b.lo + a.hi, -slopeB + b.hi - a.lo), 0.0D);
+                }
+                this.lo = Math.min(this.lo, lo);
+                this.hi = Math.max(this.hi, hi);
+            }
+            final double slack = 1.0E-5D * (1.0D + Math.max(Math.abs(this.lo), Math.abs(this.hi)));
+            this.lo -= slack;
+            this.hi += slack;
+        }
+
+        private void end(int i, double from, double to, int cellY, int cellZ, int minX, int minY, int minZ) {
+            this.values[i].eval(cellY, cellZ, minX, minY, minZ);
+            double lo = this.values[i].lo, hi = this.values[i].hi;
+            final double derivative = this.derivatives[i];
+            if (derivative != 0.0D) {
+                final double a = derivative * (from - this.locations[i]), b = derivative * (to - this.locations[i]);
+                lo += Math.min(a, b);
+                hi += Math.max(a, b);
+            }
+            this.lo = Math.min(this.lo, lo);
+            this.hi = Math.max(this.hi, hi);
         }
     }
 

@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Arrays;
 
 @Mixin(Beardifier.class)
 public abstract class MixinBeardifier implements CellBounds.BeardBounds {
@@ -28,10 +28,13 @@ public abstract class MixinBeardifier implements CellBounds.BeardBounds {
     @Unique private int fcg$maxX = Integer.MIN_VALUE;
     @Unique private int fcg$maxY = Integer.MIN_VALUE;
     @Unique private int fcg$maxZ = Integer.MIN_VALUE;
+    @Unique private int[] fcg$boxes;
+    @Unique private int fcg$boxCount;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void fcg$computeBounds(CallbackInfo ci) {
-        if (!CellBounds.onlyVanillaBeardTerms()) {
+    @Unique
+    private void fcg$bound() {
+        this.fcg$boxes = new int[24];
+        if (!CellBounds.onlyVanillaBeardTerms((Beardifier) (Object) this)) {
             this.fcg$include(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
             return;
         }
@@ -60,18 +63,38 @@ public abstract class MixinBeardifier implements CellBounds.BeardBounds {
 
     @Unique
     private void fcg$include(long minX, long minY, long minZ, long maxX, long maxY, long maxZ) {
-        this.fcg$minX = (int) Math.max(Integer.MIN_VALUE, Math.min(this.fcg$minX, minX));
-        this.fcg$minY = (int) Math.max(Integer.MIN_VALUE, Math.min(this.fcg$minY, minY));
-        this.fcg$minZ = (int) Math.max(Integer.MIN_VALUE, Math.min(this.fcg$minZ, minZ));
-        this.fcg$maxX = (int) Math.min(Integer.MAX_VALUE, Math.max(this.fcg$maxX, maxX));
-        this.fcg$maxY = (int) Math.min(Integer.MAX_VALUE, Math.max(this.fcg$maxY, maxY));
-        this.fcg$maxZ = (int) Math.min(Integer.MAX_VALUE, Math.max(this.fcg$maxZ, maxZ));
+        final int at = this.fcg$boxCount++ * 6;
+        if (at == this.fcg$boxes.length) this.fcg$boxes = Arrays.copyOf(this.fcg$boxes, at * 2);
+        final int[] boxes = this.fcg$boxes;
+        boxes[at] = (int) Math.max(Integer.MIN_VALUE, minX);
+        boxes[at + 1] = (int) Math.max(Integer.MIN_VALUE, minY);
+        boxes[at + 2] = (int) Math.max(Integer.MIN_VALUE, minZ);
+        boxes[at + 3] = (int) Math.min(Integer.MAX_VALUE, maxX);
+        boxes[at + 4] = (int) Math.min(Integer.MAX_VALUE, maxY);
+        boxes[at + 5] = (int) Math.min(Integer.MAX_VALUE, maxZ);
+        this.fcg$minX = Math.min(this.fcg$minX, boxes[at]);
+        this.fcg$minY = Math.min(this.fcg$minY, boxes[at + 1]);
+        this.fcg$minZ = Math.min(this.fcg$minZ, boxes[at + 2]);
+        this.fcg$maxX = Math.max(this.fcg$maxX, boxes[at + 3]);
+        this.fcg$maxY = Math.max(this.fcg$maxY, boxes[at + 4]);
+        this.fcg$maxZ = Math.max(this.fcg$maxZ, boxes[at + 5]);
     }
 
     @Override
     public boolean fcg$zeroIn(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        return maxX < this.fcg$minX || minX > this.fcg$maxX || maxY < this.fcg$minY || minY > this.fcg$maxY
-                || maxZ < this.fcg$minZ || minZ > this.fcg$maxZ;
+        if (this.fcg$boxes == null) this.fcg$bound();
+        if (maxX < this.fcg$minX || minX > this.fcg$maxX || maxY < this.fcg$minY || minY > this.fcg$maxY
+                || maxZ < this.fcg$minZ || minZ > this.fcg$maxZ) {
+            return true;
+        }
+        final int[] boxes = this.fcg$boxes;
+        for (int at = 0, end = this.fcg$boxCount * 6; at < end; at += 6) {
+            if (maxX >= boxes[at] && minX <= boxes[at + 3] && maxY >= boxes[at + 1] && minY <= boxes[at + 4]
+                    && maxZ >= boxes[at + 2] && minZ <= boxes[at + 5]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Redirect(method = "compute", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/ObjectListIterator;hasNext()Z", remap = false))
@@ -79,6 +102,7 @@ public abstract class MixinBeardifier implements CellBounds.BeardBounds {
         final int x = context.blockX();
         final int y = context.blockY();
         final int z = context.blockZ();
+        if (this.fcg$boxes == null) this.fcg$bound();
         if (x < this.fcg$minX || x > this.fcg$maxX || y < this.fcg$minY || y > this.fcg$maxY || z < this.fcg$minZ || z > this.fcg$maxZ) {
             return false;
         }

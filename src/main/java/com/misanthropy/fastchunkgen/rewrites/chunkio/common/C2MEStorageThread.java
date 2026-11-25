@@ -46,6 +46,17 @@ public class C2MEStorageThread extends Thread {
 
     private static final long SPIN_PARK_NANOS = 50_000L;
 
+    private static final AtomicLong ENCODER_SERIAL = new AtomicLong(0);
+
+    private static final ExecutorService ENCODER = Executors.newFixedThreadPool(Math.max(1, Math.min(2, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM / 4)), runnable -> {
+        Thread thread = new Thread(runnable, "FastChunkGen Chunk Encoder #%d".formatted(ENCODER_SERIAL.incrementAndGet()));
+        thread.setDaemon(true);
+        thread.setPriority(Thread.MIN_PRIORITY);
+        return thread;
+    });
+
+    private volatile boolean bulkWrite = false;
+
     private final AtomicBoolean closing = new AtomicBoolean(false);
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 
@@ -206,16 +217,21 @@ public class C2MEStorageThread extends Thread {
     }
 
     private void flush0(boolean sync) {
-        while (true) {
-            runWriteFutureGC();
-            if (handleTasks()) continue;
-            if (handlePendingReads()) continue;
-            if (handlePendingWrites()) continue;
-            if (writeBacklog()) continue;
+        this.bulkWrite = true;
+        try {
+            while (true) {
+                runWriteFutureGC();
+                if (handleTasks()) continue;
+                if (handlePendingReads()) continue;
+                if (handlePendingWrites()) continue;
+                if (writeBacklog()) continue;
 
-            break;
+                break;
+            }
+            flushBacklog();
+        } finally {
+            this.bulkWrite = false;
         }
-        flushBacklog();
         if (sync) {
             try {
                 forceRegionFiles();
@@ -467,6 +483,7 @@ public class C2MEStorageThread extends Thread {
                 completeWriteFutures(pos, error);
             }
         } else {
+            final Executor encoder = this.bulkWrite || this.closing.get() ? GlobalExecutors.executor : ENCODER;
             final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
@@ -488,7 +505,7 @@ public class C2MEStorageThread extends Thread {
                     SneakyThrow.sneaky(t);
                     return null; // Unreachable anyway
                 }
-            }, GlobalExecutors.executor).thenApplyAsync(bytes -> {
+            }, encoder).thenApplyAsync(bytes -> {
                 if (nbt != this.cache.get(pos)) return Boolean.FALSE;
                 try {
                     final ChunkPos pos1 = new ChunkPos(pos);

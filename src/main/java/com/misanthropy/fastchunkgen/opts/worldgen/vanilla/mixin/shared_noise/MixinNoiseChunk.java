@@ -1,6 +1,7 @@
 package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.shared_noise;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.CellBounds;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.common.SharedNoise;
 import com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill.INoiseInterpolator;
 import net.minecraft.server.level.ColumnPos;
@@ -55,16 +56,14 @@ public abstract class MixinNoiseChunk {
         final SharedNoise shared = SharedNoise.of(random, settings.minY(), settings.height(), this.cellWidth, this.cellHeight);
         if (shared == null) return;
         if (shared.levelsShareable(this.initialDensityNoJaggedness)) this.fcg$sharedLevels = shared;
-        if (cellCountXZ * this.cellWidth == 16 && (firstX & 15) == 0 && (firstZ & 15) == 0
-                && shared.columnsShareable(this.interpolators, router, this.cellCaches)) {
-            this.fcg$sharedColumns = shared;
-        }
+        if (shared.columnsShareable(this.interpolators, router, this.cellCaches)) this.fcg$sharedColumns = shared;
     }
 
     @Inject(method = "fillSlice", at = @At("HEAD"), cancellable = true)
     private void fcg$fillSliceShared(boolean slice0, int cellX, CallbackInfo ci) {
         final SharedNoise shared = this.fcg$sharedColumns;
         if (shared == null) return;
+        final boolean probe = !((CellBounds.Cells) this).fcg$filling();
         final List<NoiseChunk.NoiseInterpolator> interpolators = this.interpolators;
         this.cellStartBlockX = cellX * this.cellWidth;
         this.inCellX = 0;
@@ -75,7 +74,7 @@ public abstract class MixinNoiseChunk {
             ++this.arrayInterpolationCounter;
             final boolean zEdge = (this.cellStartBlockZ & 15) == 0;
             final long key = ColumnPos.asLong(this.cellStartBlockX, this.cellStartBlockZ);
-            final long counterSteps = xEdge || zEdge ? shared.takeColumn(key, interpolators, slice0, i) : -1L;
+            final long counterSteps = shared.takeColumn(key, interpolators, slice0, i, probe);
             if (counterSteps >= 0L) {
                 this.interpolationCounter += counterSteps;
                 continue;
@@ -86,7 +85,7 @@ public abstract class MixinNoiseChunk {
                 final INoiseInterpolator corners = (INoiseInterpolator) interpolator;
                 interpolator.fillArray((slice0 ? corners.fcg$slice0() : corners.fcg$slice1())[i], this.sliceFillingContextProvider);
             }
-            if (xEdge || zEdge) shared.putColumn(key, (xEdge ? 2 : 1) * (zEdge ? 2 : 1), interpolators, slice0, i, this.interpolationCounter - counterBefore);
+            if (xEdge || zEdge || probe) shared.putColumn(key, (xEdge ? 2 : 1) * (zEdge ? 2 : 1), interpolators, slice0, i, this.interpolationCounter - counterBefore, probe);
         }
         ++this.arrayInterpolationCounter;
         ci.cancel();

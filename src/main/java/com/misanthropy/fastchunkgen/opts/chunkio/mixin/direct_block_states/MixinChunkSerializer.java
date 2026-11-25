@@ -32,7 +32,7 @@ public abstract class MixinChunkSerializer {
             if (tag != null) {
                 if (ShortcutVerify.ENABLED) {
                     final Object vanilla = original.call(codec, ops, value).result().orElse(null);
-                    ShortcutVerify.BLOCK_STATES.record(tag.equals(vanilla), vanilla);
+                    ShortcutVerify.BLOCK_STATES.record(DirectBlockStates.sameBlocks(tag, (CompoundTag) vanilla), vanilla);
                 }
                 return DataResult.success(tag);
             }

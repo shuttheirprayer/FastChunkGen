@@ -3,6 +3,7 @@ package com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.fill;
 import net.minecraft.world.level.levelgen.NoiseChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(NoiseChunk.NoiseInterpolator.class)
 public interface INoiseInterpolator {
@@ -12,5 +13,8 @@ public interface INoiseInterpolator {
 
     @Accessor("slice1")
     double[][] fcg$slice1();
+
+    @Invoker("selectCellYZ")
+    void fcg$selectCellYZ(int cellY, int cellZ);
 
 }

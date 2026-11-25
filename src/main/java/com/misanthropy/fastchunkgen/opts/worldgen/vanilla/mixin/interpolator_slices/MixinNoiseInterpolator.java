@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.ArrayDeque;
 
 @Mixin(NoiseChunk.NoiseInterpolator.class)
 public abstract class MixinNoiseInterpolator implements InterpolatorSlices {
@@ -29,22 +28,22 @@ public abstract class MixinNoiseInterpolator implements InterpolatorSlices {
 
     @Override
     public void fcg$acquireSlices(int cellCountY, int cellCountZ) {
-        ArrayDeque<double[][]> pool = SlicePool.local();
+        SlicePool pool = SlicePool.local();
         if (this.slice0 == null) this.slice0 = this.fcg$slice(pool, cellCountY, cellCountZ);
         if (this.slice1 == null) this.slice1 = this.fcg$slice(pool, cellCountY, cellCountZ);
     }
 
     @Unique
-    private double[][] fcg$slice(ArrayDeque<double[][]> pool, int cellCountY, int cellCountZ) {
-        double[][] slice = SlicePool.take(pool, cellCountZ + 1, cellCountY + 1);
+    private double[][] fcg$slice(SlicePool pool, int cellCountY, int cellCountZ) {
+        double[][] slice = pool.take(cellCountZ + 1, cellCountY + 1);
         return slice != null ? slice : this.allocateSlice(cellCountY, cellCountZ);
     }
 
     @Override
     public void fcg$releaseSlices() {
-        ArrayDeque<double[][]> pool = SlicePool.local();
-        SlicePool.give(pool, this.slice0);
-        SlicePool.give(pool, this.slice1);
+        SlicePool pool = SlicePool.local();
+        pool.give(this.slice0);
+        pool.give(this.slice1);
         this.slice0 = null;
         this.slice1 = null;
     }

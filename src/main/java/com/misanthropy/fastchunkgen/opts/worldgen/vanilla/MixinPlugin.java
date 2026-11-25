@@ -23,6 +23,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.shared_noise."))
             return Config.shareNoiseBetweenChunks && !ModUtil.isModLoaded("noisium");
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.column_noise."))
+            return Config.columnDensityCache;
+
         if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.density_function_hash."))
             return Config.cacheDensityFunctionHashes;
 

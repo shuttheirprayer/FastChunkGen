@@ -35,7 +35,7 @@ public class MixinNbtCompound {
      */
     @ModifyArg(method = "<init>()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;<init>(Ljava/util/Map;)V"), index = 0)
     private static Map<String, Tag> modifyMap(Map<String, Tag> map) {
-        return new Object2ObjectOpenHashMap<>();
+        return new Object2ObjectOpenHashMap<>(4);
     }
 
     @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
