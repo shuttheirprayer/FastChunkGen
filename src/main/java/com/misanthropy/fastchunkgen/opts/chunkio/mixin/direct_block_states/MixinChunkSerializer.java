@@ -30,9 +30,15 @@ public abstract class MixinChunkSerializer {
         if (codec == BLOCK_STATE_CODEC && ops == NbtOps.INSTANCE && value instanceof PalettedContainer<?> container) {
             final CompoundTag tag = DirectBlockStates.encode((PalettedContainer<BlockState>) container);
             if (tag != null) {
-                if (ShortcutVerify.ENABLED) {
-                    final Object vanilla = original.call(codec, ops, value).result().orElse(null);
-                    ShortcutVerify.BLOCK_STATES.record(DirectBlockStates.sameBlocks(tag, (CompoundTag) vanilla), vanilla);
+                if (ShortcutVerify.ENABLED || DirectBlockStates.shouldCompare()) {
+                    final DataResult vanillaResult = original.call(codec, ops, value);
+                    final Object vanilla = vanillaResult.result().orElse(null);
+                    final boolean same = vanilla instanceof CompoundTag && DirectBlockStates.sameBlocks(tag, (CompoundTag) vanilla);
+                    if (ShortcutVerify.ENABLED) ShortcutVerify.BLOCK_STATES.record(same, vanilla);
+                    if (!same) {
+                        DirectBlockStates.switchOff();
+                        return vanillaResult;
+                    }
                 }
                 return DataResult.success(tag);
             }

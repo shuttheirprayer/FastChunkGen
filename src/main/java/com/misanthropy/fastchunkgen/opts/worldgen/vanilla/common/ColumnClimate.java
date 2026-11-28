@@ -18,6 +18,7 @@ public final class ColumnClimate implements DensityFunction {
     private final Thread owner = Thread.currentThread();
     private final long[] keys = new long[16];
     private final double[] values = new double[16];
+    private int hits;
 
     private ColumnClimate(DensityFunction wrapped) {
         this.wrapped = wrapped;
@@ -41,7 +42,7 @@ public final class ColumnClimate implements DensityFunction {
             yFree = SharedNoise.isYFree(wrapped);
             Y_FREE.put(unwrapped, yFree);
         }
-        return yFree ? new ColumnClimate(wrapped) : wrapped;
+        return yFree && !ShortcutVerify.COLUMN.broken() ? new ColumnClimate(wrapped) : wrapped;
     }
 
     @Override
@@ -52,6 +53,14 @@ public final class ColumnClimate implements DensityFunction {
         final long key = (long) x << 32 | (z & 0xFFFFFFFFL);
         final int slot = (x >> 2 & 3) << 2 | (z >> 2 & 3);
         if (this.keys[slot] == key) {
+            if (!ShortcutVerify.ENABLED && ShortcutVerify.due(++this.hits)) {
+                final double actual = this.wrapped.compute(context);
+                if (Double.doubleToRawLongBits(this.values[slot]) != Double.doubleToRawLongBits(actual)) {
+                    ShortcutVerify.COLUMN.broke(x + "," + context.blockY() + "," + z);
+                    this.values[slot] = actual;
+                    return actual;
+                }
+            }
             if (ShortcutVerify.ENABLED) {
                 ShortcutVerify.COLUMN.record(Double.doubleToRawLongBits(this.values[slot]) == Double.doubleToRawLongBits(this.wrapped.compute(context)), x + "," + context.blockY() + "," + z);
             }

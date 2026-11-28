@@ -37,6 +37,7 @@ public final class ColumnMarker implements DensityFunction {
     }
 
     public DensityFunction wrap(int minX, int minZ, int size) {
+        if (ShortcutVerify.COLUMN_NOISE.broken()) return this.inner;
         return this.point ? new PointNoise(this.inner) : new ColumnNoise(this.inner, minX, minZ, size);
     }
 

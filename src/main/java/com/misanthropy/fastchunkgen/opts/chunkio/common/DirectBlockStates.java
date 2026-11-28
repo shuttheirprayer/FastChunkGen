@@ -1,5 +1,6 @@
 package com.misanthropy.fastchunkgen.opts.chunkio.common;
 
+import com.misanthropy.fastchunkgen.base.common.util.Log;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -12,6 +13,7 @@ import net.minecraft.world.level.chunk.PalettedContainer;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class DirectBlockStates {
 
@@ -19,7 +21,22 @@ public final class DirectBlockStates {
 
     private static final Map<BlockState, CompoundTag> STATE_TAGS = new ConcurrentHashMap<>();
 
+    private static final AtomicLong ENCODED = new AtomicLong();
+    private static volatile boolean off;
+
     private DirectBlockStates() {
+    }
+
+    public static boolean shouldCompare() {
+        final long n = ENCODED.incrementAndGet();
+        return n <= 200L || (n & 1023L) == 0L;
+    }
+
+    public static void switchOff() {
+        if (!off) {
+            off = true;
+            Log.MAIN.error("Direct block state encoding switched off for this run: a section's encoded block palette differed from the vanilla codec's");
+        }
     }
 
     private static CompoundTag stateTag(BlockState state) {
@@ -54,7 +71,7 @@ public final class DirectBlockStates {
     }
 
     public static CompoundTag encode(PalettedContainer<BlockState> container) {
-        if (container.getClass() != PalettedContainer.class) return null;
+        if (off || container.getClass() != PalettedContainer.class) return null;
         final int size = PalettedContainer.Strategy.SECTION_STATES.size();
         final int[] ids = IDS.get();
         final List<BlockState> values = new ArrayList<>();

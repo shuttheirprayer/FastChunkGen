@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Mixin(Climate.ParameterList.class)
 public abstract class MixinParameterList<T> {
@@ -26,11 +27,20 @@ public abstract class MixinParameterList<T> {
         Object flat = this.fcg$flat;
         if (flat == null) flat = this.fcg$buildFlat();
         if (flat == FCG$UNSUPPORTED) return;
+        if (ShortcutVerify.CLIMATE.broken()) return;
         final T found = (T) ((FlatClimateTree) flat).find(target);
         if (ShortcutVerify.ENABLED) {
             final Climate.ParameterList<T> self = (Climate.ParameterList<T>) (Object) this;
             final T brute = self.findValueBruteForce(target);
             ShortcutVerify.CLIMATE.record(found == brute || fcg$fitness(self, found, target) == fcg$fitness(self, brute, target), target);
+        } else if (ThreadLocalRandom.current().nextInt(4096) == 0) {
+            final Climate.ParameterList<T> self = (Climate.ParameterList<T>) (Object) this;
+            final T brute = self.findValueBruteForce(target);
+            if (found != brute && fcg$fitness(self, found, target) != fcg$fitness(self, brute, target)) {
+                ShortcutVerify.CLIMATE.broke(target);
+                cir.setReturnValue(brute);
+                return;
+            }
         }
         cir.setReturnValue(found);
     }

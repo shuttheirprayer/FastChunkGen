@@ -41,6 +41,18 @@ public class MixinPlugin extends ModuleMixinPlugin {
             return Config.reuseSurfaceRules
                     && !ModCompat.isModernFixFeatureEnabled("mixin.perf.worldgen_allocation");
 
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.flat_memo."))
+            return Config.memoizeFlatCacheColumns;
+
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.surface_fold."))
+            return Config.foldSurfaceRules;
+
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.post_processing_setblock."))
+            return Config.skipRedundantPostProcessSetBlock;
+
+        if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.jigsaw_rewind."))
+            return Config.rewindRepeatedJigsawElements && !ModUtil.isModLoaded("structure_layout_optimizer");
+
         if (mixinClassName.startsWith("com.misanthropy.fastchunkgen.opts.worldgen.vanilla.mixin.post_processing."))
             return Config.skipNoOpPostProcessing;
 

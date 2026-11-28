@@ -2,6 +2,7 @@ package com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues;
 
 import com.misanthropy.fastchunkgen.base.common.ModuleMixinPlugin;
 import com.misanthropy.fastchunkgen.base.common.util.ModUtil;
+import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.Config;
 import com.misanthropy.fastchunkgen.fixes.worldgen.threading_issues.common.debug.SMAPPool;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class MixinPlugin extends ModuleMixinPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (!super.shouldApplyMixin(targetClassName, mixinClassName)) return false;
         if (mixinClassName.endsWith(LOST_CITIES_CACHE_MIXIN)) return !ModUtil.isModLoaded("lc2h") && hasLegacyLostCitiesCache(targetClassName);
+        if (mixinClassName.endsWith("MixinDataFixerTypeFailure")) return Config.releaseFailedDataFixerRewrites;
         return true;
     }
 

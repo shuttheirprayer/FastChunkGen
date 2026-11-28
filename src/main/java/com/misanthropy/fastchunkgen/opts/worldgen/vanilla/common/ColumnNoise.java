@@ -10,6 +10,7 @@ public final class ColumnNoise implements DensityFunction.SimpleFunction {
     private final DensityFunction inner;
     private final int minX, minZ, size;
     private double[] values;
+    private int hits;
 
     ColumnNoise(DensityFunction inner, int minX, int minZ, int size) {
         this.inner = inner;
@@ -41,6 +42,13 @@ public final class ColumnNoise implements DensityFunction.SimpleFunction {
             values[index] = value;
         } else if (ShortcutVerify.ENABLED) {
             ShortcutVerify.COLUMN_NOISE.record(value == this.inner.compute(context), context.blockX() + "," + context.blockY() + "," + context.blockZ());
+        } else if (ShortcutVerify.due(++this.hits)) {
+            final double actual = this.inner.compute(context);
+            if (Double.doubleToRawLongBits(actual) != Double.doubleToRawLongBits(value)) {
+                ShortcutVerify.COLUMN_NOISE.broke(context.blockX() + "," + context.blockY() + "," + context.blockZ());
+                values[index] = actual;
+                return actual;
+            }
         }
         return value;
     }

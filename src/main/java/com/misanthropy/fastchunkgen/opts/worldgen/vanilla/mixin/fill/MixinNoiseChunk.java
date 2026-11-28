@@ -59,6 +59,7 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
     @Unique private boolean fcg$solidAllowed;
     @Unique private int fcg$cellMode;
     @Unique private int fcg$verifyMode;
+    @Unique private int fcg$cellChecks;
 
     @ModifyArg(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableList$Builder;add(Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;", ordinal = 0, remap = false))
     private Object fcg$captureAquiferFiller(Object filler) {
@@ -105,7 +106,7 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
                 this.fcg$veins = withVeins;
                 this.fcg$veinCorners = this.fcg$veinToggle instanceof NoiseChunk.NoiseInterpolator ? (INoiseInterpolator) this.fcg$veinToggle : null;
             }
-            if (this.fcg$canSkipCells) {
+            if (this.fcg$canSkipCells && !ShortcutVerify.SKIPPED_CELLS.broken() && !ShortcutVerify.PROBED_CELLS.broken()) {
                 this.fcg$bounds = CellBounds.compile(((ICacheAllInCell) this.fcg$finalDensity).fcg$noiseFiller(),
                         this.cellWidth, this.cellHeight, this.blender == Blender.empty());
             }
@@ -149,6 +150,13 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
         if (ShortcutVerify.ENABLED) {
             final BlockState actual = this.blockStateRule.calculate((NoiseChunk) (Object) this);
             ShortcutVerify.PROBED_CELLS.record(state == actual, this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ + " " + state + " " + actual);
+        } else if (ShortcutVerify.due(++this.fcg$cellChecks)) {
+            final BlockState actual = this.blockStateRule.calculate((NoiseChunk) (Object) this);
+            if (state != actual) {
+                ShortcutVerify.PROBED_CELLS.broke(this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ);
+                cir.setReturnValue(actual);
+                return;
+            }
         }
         cir.setReturnValue(state);
     }
@@ -180,7 +188,7 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
         final int minZ = (this.firstCellZ + cellZ) * this.cellWidth;
         this.fcg$cellMode = this.fcg$boundedCell(cellY, cellZ, minY, minZ, this.fcg$solidAllowed);
         if (this.fcg$cellMode == CellBounds.NORMAL) return;
-        if (ShortcutVerify.ENABLED) {
+        if (ShortcutVerify.ENABLED || (++this.fcg$cellChecks & 1023) == 0) {
             this.fcg$verifyMode = this.fcg$cellMode;
             this.fcg$cellMode = CellBounds.NORMAL;
             return;
@@ -205,11 +213,12 @@ public abstract class MixinNoiseChunk implements CellBounds.Cells {
         if (!this.fcg$sortingCells) return;
         final double[] densities = ((ICacheAllInCell) this.fcg$finalDensity).fcg$values();
         final boolean firstPositive = densities[0] > 0.0D;
-        if (ShortcutVerify.ENABLED && this.fcg$verifyMode != CellBounds.NORMAL) {
+        if (this.fcg$verifyMode != CellBounds.NORMAL) {
             boolean ok = true;
             for (double density : densities) ok &= density > 0.0D == (this.fcg$verifyMode == CellBounds.SOLID);
             this.fcg$verifyMode = CellBounds.NORMAL;
-            ShortcutVerify.SKIPPED_CELLS.record(ok, this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ);
+            if (ShortcutVerify.ENABLED) ShortcutVerify.SKIPPED_CELLS.record(ok, this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ);
+            else if (!ok) ShortcutVerify.SKIPPED_CELLS.broke(this.cellStartBlockX + "," + this.cellStartBlockY + "," + this.cellStartBlockZ);
         }
         for (double density : densities) {
             if (density > 0.0D != firstPositive) return;
